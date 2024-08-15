@@ -1,9 +1,14 @@
 import { Request, Response } from 'express';
 
 export const fetchSavedModels = (req: Request, res: Response) => {
+    const imgUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1hZxkl7aLUy170veFH3FI9uDbkqoSBjMY2A&s'
     res.status(200).json({
-        message: 'Saved models fetched',
-        savedModels: [{ title: 'Model 1' }, { title: 'Model 2' }, { title: 'Model 3' }],
+        message: 'Saved models fetched successfully',
+        savedModels: [
+            { id: 'I like nuts', modelName: 'Model 1', iconUrl: imgUrl }, 
+            { id: 'I like butts', modelName: 'Model 2', iconUrl: imgUrl }, 
+            { id: 'I like noice', modelName: 'Model 3', iconUrl: imgUrl }
+        ],
     });
 };
 

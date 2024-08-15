@@ -5,7 +5,7 @@ import express, { Express } from 'express';
 import session from 'express-session';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import apiRoutes from './api/api.routes';
+import apiVersion1 from './api/api.routes';
 
 // Routes
 // import apiRoutes from './api/v1/api.routes';
@@ -53,11 +53,7 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 // Routes
-app.use('/api/v1/', apiRoutes);
-
-app.get('/api/ping', (req, res) => {
-    res.status(200).json({ message: 'pong' });
-});
+app.use('/api/v1/', apiVersion1);
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
