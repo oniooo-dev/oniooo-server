@@ -1,6 +1,6 @@
 # Oniooo Server Repository
 
-## Oniooo's Server Repository
+Oniooo's Server Repository
 
 ## Installation
 To set up this project locally, follow these steps:
