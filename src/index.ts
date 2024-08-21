@@ -7,9 +7,6 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import apiVersion1 from './api/api.routes';
 
-// Routes
-// import apiRoutes from './api/v1/api.routes';
-
 // Load environment variables
 dotenv.config();
 const port = process.env.PORT || 8080;

@@ -1,38 +1,85 @@
 import { Request, Response } from 'express';
-
-export const fetchSavedModels = (req: Request, res: Response) => {
-    const imgUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1hZxkl7aLUy170veFH3FI9uDbkqoSBjMY2A&s';
-    res.status(200).json({
-        message: 'Saved models fetched successfully',
-        savedModels: [
-            { id: 'I like nuts', modelName: 'Model 1', iconUrl: imgUrl },
-            { id: 'I like butts', modelName: 'Model 2', iconUrl: imgUrl },
-            { id: 'I like noice', modelName: 'Model 3', iconUrl: imgUrl },
-        ],
-    });
-};
-
-// Fetch conversation history
-export const fetchConversationHistory = (req: Request, res: Response) => {
-    res.status(200).json({
-        message: 'Conversation history fetched',
-        conversations: [
-            { id: '1', title: 'Conversation 1' },
-            { id: '2', title: 'Conversation 2' },
-            { id: '3', title: 'Conversation 3' },
-        ],
-    });
-};
+import * as MelodyService from './melody.services';
+import { MelodyError } from '../../../types/errors';
 
 // Create conversation
-export const createConversation = (req: Request, res: Response) => {
+export const createConversationController = async (req: Request, res: Response) => {
+    const { modelId, firstPrompt } = req.body;
+    const newConversation = await MelodyService.createUserConversation(modelId, firstPrompt);
+
+    // ...
+
     res.status(201).json({
         message: 'Conversation created',
     });
 };
 
+export const createOwnedModelController = async (req: Request, res: Response) => {
+    const { modelId } = req.body;
+    const newOwnedModel = await MelodyService.createUserOwnedModel(modelId);
+
+    // ...
+
+    res.status(201).json({
+        message: 'Model saved',
+    });
+};
+
+// Create conversation message
+export const createConversationMessage = (req: Request, res: Response) => {
+    res.status(201).json({
+        message: 'Message created',
+    });
+};
+
+export const fetchOwnedModelsController = async (req: Request, res: Response) => {
+    // Attempt to register the user
+    const userOwnedModels = await MelodyService.fetchUserOwnedModels();
+
+    // Validate the response from AuthService
+    if (!userOwnedModels) {
+        throw new MelodyError(500, 'Internal server error');
+    }
+
+    res.status(200).json({
+        message: 'Saved models fetched',
+        userOwnedModels: userOwnedModels,
+    });
+};
+
+export const fetchModelController = async (req: Request, res: Response) => {
+    const { modelId } = req.body;
+
+    // Attempt to register the user
+    const userOwnedModels = await MelodyService.fetchModel(modelId);
+
+    // Validate the response from AuthService
+    if (!userOwnedModels) {
+        throw new MelodyError(500, 'Internal server error');
+    }
+
+    res.status(200).json({
+        message: 'Saved models fetched',
+        userOwnedModels: userOwnedModels,
+    });
+};
+
+// Fetch conversation history
+export const fetchConversationsController = async (req: Request, res: Response) => {
+    const conversations = await MelodyService.fetchUserConversations();
+
+    if (!conversations) {
+        throw new MelodyError(500, 'Internal server error');
+    }
+
+    res.status(200).json({
+        message: 'Conversation history fetched',
+        conversations: conversations,
+    });
+};
+
 // Fetch messages by conversation ID
-export const fetchMessagesByConversationId = (req: Request, res: Response) => {
+export const fetchConversationMessagesController = (req: Request, res: Response) => {
     const conversationId = req.params.conversationId;
     const systemIconUrl = 'https://i.pinimg.com/736x/3a/6a/56/3a6a56863e245d6f7c33acda19f82916.jpg';
     const userIconUrl = 'https://i.pinimg.com/550x/b8/22/fd/b822fd5ee0e84c73f5ade20cb68c8099.jpg';
@@ -46,12 +93,9 @@ export const fetchMessagesByConversationId = (req: Request, res: Response) => {
     });
 };
 
-// Create conversation message
-export const createConversationMessage = (req: Request, res: Response) => {
-    res.status(201).json({
-        message: 'Message created',
-    });
-};
+// ...
+// ...
+// ...
 
 // Update conversation title
 export const updateConversationTitle = (req: Request, res: Response) => {

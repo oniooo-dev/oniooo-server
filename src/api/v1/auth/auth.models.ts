@@ -1,8 +1,10 @@
 type User = {
     id: string;
     username: string;
-    email: string;
-}
+    email: string | undefined;
+    role: string;
+    icon_url: string | undefined;
+};
 
 export interface UserRegisterRequest {
     username: string;

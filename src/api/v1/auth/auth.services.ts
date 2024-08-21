@@ -1,19 +1,32 @@
-import supabase from "../../../configs/SupabaseClient";
-import { createUser, findUserByEmail } from "../../../db/users";
-import { UserAuthError } from "../../../types/errors";
-import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from "./auth.models";
+import supabase from '../../../configs/SupabaseClient';
+import { createUserDetails } from '../../../db/auth';
+import { UserAuthError } from '../../../types/errors';
+import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
 
 export const registerUserService = async (register: UserRegisterRequest): Promise<UserRegisterResponse> => {
-    // Validate if the email isn't already in use
-    const existingUser = await findUserByEmail(register.email);
-        
-    if (existingUser) {
-        throw new UserAuthError(401, 'Email already in use');
-    }
+    // Manage 1-day free trial for new users
+
+    // Set trial start date to current date
+    const trialStartDate = new Date();
+
+    // Set the trial end date to one day later
+    const trialEndDate = new Date(trialStartDate);
+    trialEndDate.setDate(trialStartDate.getDate() + 1);
+
+    const user_metadata = {
+        username: register.username,
+        role: 'trial_user',
+        trial_start: trialStartDate.toISOString(),
+        trial_end: trialEndDate.toISOString(),
+        icon_url: 'https://i.pinimg.com/originals/31/12/1c/31121c89d6a0f08709c344f84ae5f5ff.jpg',
+    };
 
     const { data, error } = await supabase.auth.signUp({
         email: register.email,
         password: register.password,
+        options: {
+            data: user_metadata,
+        },
     });
 
     if (error) {
@@ -24,14 +37,17 @@ export const registerUserService = async (register: UserRegisterRequest): Promis
         throw new UserAuthError(401, 'User not found');
     }
 
-    // Create the user in the database
-    createUser(register.username, register.email, register.password);
+    // Create user details entry in the database
+    createUserDetails(data.user.id, data.user.user_metadata.username as string);
 
+    // Return data to the client-side
     const user = {
         id: data.user.id,
-        username: register.username,
-        email: register.email,
-    }
+        username: data.user.user_metadata.username as string,
+        email: data.user.email,
+        role: data.user.user_metadata.role as string,
+        icon_url: data.user.user_metadata.icon_url as string,
+    };
 
     const accessToken = data.session?.access_token;
     const refreshToken = data.session?.refresh_token;
@@ -40,7 +56,7 @@ export const registerUserService = async (register: UserRegisterRequest): Promis
         throw new UserAuthError(401, 'No session tokens found');
     }
 
-    return { user: user, accessToken: accessToken, refreshToken: refreshToken }; 
+    return { user: user, accessToken: accessToken, refreshToken: refreshToken };
 };
 
 export const loginUserService = async (login: UserLoginRequest): Promise<UserLoginResponse> => {
@@ -53,17 +69,13 @@ export const loginUserService = async (login: UserLoginRequest): Promise<UserLog
         throw new UserAuthError(error.status ? error.status : 500, error.message);
     }
 
-    const userData = await findUserByEmail(login.email);
-
-    if (!userData) {
-        throw new UserAuthError(401, 'User not found');
-    }
-
     const user = {
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-    }
+        id: data.user.id,
+        username: data.user.user_metadata.username as string,
+        email: data.user.email,
+        role: data.user.user_metadata.role as string,
+        icon_url: data.user.user_metadata.icon_url as string,
+    };
 
     const accessToken = data.session.access_token;
     const refreshToken = data.session.refresh_token;

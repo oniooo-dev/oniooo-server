@@ -1,10 +1,12 @@
 import { Router } from 'express';
 // import { loginInputValidation, registerInputValidation } from '../../../middleware/auth/input';
 import {
-    fetchSavedModels,
-    fetchConversationHistory,
-    createConversation,
-    fetchMessagesByConversationId,
+    fetchOwnedModelsController,
+    createOwnedModelController,
+    fetchModelController,
+    fetchConversationsController,
+    createConversationController,
+    fetchConversationMessagesController,
     createConversationMessage,
     updateConversationTitle,
     deleteConversation,
@@ -12,12 +14,14 @@ import {
 
 const melodyRoutes = Router();
 
-melodyRoutes.get('/models/saved', fetchSavedModels);
-melodyRoutes.get('/conversations', fetchConversationHistory);
-melodyRoutes.post('/conversations', createConversation);
-melodyRoutes.get('/conversations/:conversationId/messages', fetchMessagesByConversationId);
-melodyRoutes.post('/conversations/:conversationId/messages', createConversationMessage);
-melodyRoutes.put('/conversations/:conversationId/title', updateConversationTitle);
-melodyRoutes.delete('/conversations/:conversationId', deleteConversation);
+melodyRoutes.get('/models/saved', fetchOwnedModelsController);
+melodyRoutes.post('/models/saved', createOwnedModelController);
+melodyRoutes.get('/models/saved/details', fetchModelController);
+melodyRoutes.get('/conversations', fetchConversationsController);
+melodyRoutes.post('/conversations', createConversationController);
+melodyRoutes.get('/conversations/:conversationId/messages', fetchConversationMessagesController);
+// melodyRoutes.post('/conversations/:conversationId/messages', createConversationMessageController);
+// melodyRoutes.put('/conversations/:conversationId/title', updateConversationTitleController);
+// melodyRoutes.delete('/conversations/:conversationId', deleteConversationController);
 
 export default melodyRoutes;
