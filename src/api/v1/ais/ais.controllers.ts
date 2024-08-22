@@ -15,6 +15,6 @@ export const fetchAIModelController = async (req: Request<any, any, any, { model
 
     res.status(200).json({
         message: 'AI model fetched',
-        aiModel: aiModel,
+        ai_model: aiModel,
     });
 };
