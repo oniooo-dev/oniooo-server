@@ -86,9 +86,9 @@ export const fetchConversationMessagesController = (req: Request, res: Response)
     res.status(200).json({
         message: 'Conversation Messages fetched',
         conversationMessages: [
-            { id: '1', iconUrl: systemIconUrl, senderName: 'Melody', senderType: 'assistant', content: 'Message 1' },
-            { id: '2', iconUrl: userIconUrl, senderName: 'Iamfunny123', senderType: 'user', content: 'Message 2' },
-            { id: '3', iconUrl: systemIconUrl, senderName: 'Gemini', senderType: 'expert', content: 'Message 3' },
+            { id: '1', iconUrl: systemIconUrl, senderName: 'Melody', senderType: 'assistant', content: 'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1' },
+            { id: '2', iconUrl: userIconUrl, senderName: 'Iamfunny123', senderType: 'user', content: 'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1' },
+            { id: '3', iconUrl: systemIconUrl, senderName: 'Gemini', senderType: 'expert', content: 'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1' },
         ],
     });
 };
