@@ -1,7 +1,7 @@
-import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express, { Express } from 'express';
+import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -9,24 +9,24 @@ import apiVersion1 from './api/api.routes';
 
 // Load environment variables
 dotenv.config();
+
 const port = process.env.PORT || 8080;
+const sessionSecretKey = process.env.SESSION_SECRET || 'SOME_SECRET_KEY';
+const cookieSecretKey = process.env.COOKIE_SECRET || 'SOME_SECRET_KEY';
 
 // Express server
 const app: Express = express();
 
-// Cookies
-app.use(cookieParser());
-
-// Session to store refresh token
+// Session Store
 app.use(
     session({
-        secret: process.env.SESSION_SECRET_KEY || 'secret',
-        resave: false,
-        saveUninitialized: false,
+        secret: sessionSecretKey,
+        saveUninitialized: false, // Don't save uninitialized sessions (users that aren't doing anything)
+        resave: false, // Don't save the session if it hasn't changed
         cookie: {
+            secure: process.env.NODE_ENV === 'production',
             httpOnly: true,
-            secure: true,
-            maxAge: 60 * 60 * 1000,
+            maxAge: 24 * 60 * 60 * 1000, // 24 hours
         },
     }),
 );
@@ -34,18 +34,17 @@ app.use(
 // CORS
 app.use(
     cors({
-        // Allow only client-side origin
-        origin: 'http://localhost:3000',
-
-        // Allow credentials
-        credentials: true,
+        origin: 'http://localhost:3000', // Allow only this client-side origin
+        credentials: true, // Allow credentials (cookies, authorization headers, etc.)
     }),
 );
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser(cookieSecretKey));
 
-// Security (no clue what they do)
+// Security Stuff
 app.use(helmet());
 app.use(morgan('dev'));
 
@@ -55,5 +54,3 @@ app.use('/api/v1/', apiVersion1);
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
-
-export default app;

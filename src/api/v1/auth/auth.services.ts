@@ -3,7 +3,7 @@ import { createUserDetails } from '../../../db/auth';
 import { UserAuthError } from '../../../types/errors';
 import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
 
-export const registerUserService = async (register: UserRegisterRequest): Promise<UserRegisterResponse> => {
+export const register = async (register: UserRegisterRequest): Promise<UserRegisterResponse> => {
     // Manage 1-day free trial for new users
 
     // Set trial start date to current date
@@ -59,7 +59,7 @@ export const registerUserService = async (register: UserRegisterRequest): Promis
     return { user: user, accessToken: accessToken, refreshToken: refreshToken };
 };
 
-export const loginUserService = async (login: UserLoginRequest): Promise<UserLoginResponse> => {
+export const login = async (login: UserLoginRequest): Promise<UserLoginResponse> => {
     const { data, error } = await supabase.auth.signInWithPassword({
         email: login.email,
         password: login.password,
@@ -87,7 +87,7 @@ export const loginUserService = async (login: UserLoginRequest): Promise<UserLog
     return { user: user, accessToken: accessToken, refreshToken: refreshToken };
 };
 
-export const logoutUser = async () => {
+export const logout = async () => {
     try {
         const { error } = await supabase.auth.signOut();
 

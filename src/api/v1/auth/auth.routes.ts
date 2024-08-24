@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { loginInputValidation, registerInputValidation } from '../../../middleware/inputs';
-import { registerController, loginController, logoutController } from './auth.controller';
+import { register, login, logout } from './auth.controller';
 
 const authRoutes = Router();
 
-authRoutes.post('/register', registerInputValidation, registerController);
-authRoutes.post('/login', loginInputValidation, loginController);
-authRoutes.post('/logout', logoutController);
+authRoutes.post('/register', registerInputValidation, register);
+authRoutes.post('/login', loginInputValidation, login);
+authRoutes.post('/logout', logout);
 
 export default authRoutes;

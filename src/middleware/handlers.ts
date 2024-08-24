@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { UserAuthError, DatabaseError } from '../types/errors';
+import { DatabaseError, UserAuthError } from '../types/errors';
 
 // For registration, login and logout
 export const authAsyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>) => {
