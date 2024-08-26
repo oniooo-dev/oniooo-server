@@ -1,11 +1,12 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
-import express, { Express } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import apiVersion1 from './api/api.routes';
+import { errorHandler } from './middleware/handlers';
 
 // Load environment variables
 dotenv.config();
@@ -50,6 +51,9 @@ app.use(morgan('dev'));
 
 // Routes
 app.use('/api/v1/', apiVersion1);
+
+// Global Error Handling
+app.use(errorHandler);
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
