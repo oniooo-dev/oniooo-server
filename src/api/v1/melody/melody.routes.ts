@@ -11,8 +11,11 @@ import {
     updateConversationTitle,
     deleteConversation,
 } from './melody.controller';
+import { authenticate } from '../../../middleware/authenticate';
 
 const melodyRoutes = Router();
+
+melodyRoutes.use(authenticate);
 
 melodyRoutes.get('/models/saved', fetchOwnedModelsController);
 melodyRoutes.post('/models/saved', createOwnedModelController);
