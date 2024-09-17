@@ -1,4 +1,4 @@
-import supabase from '../configs/SupabaseClient';
+import supabase from '../configs/supabase';
 import { DatabaseError } from '../types/errors';
 
 export const fetchAIModel = async (modelId: string) => {

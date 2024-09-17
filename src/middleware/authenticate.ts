@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import supabase from '../configs/SupabaseClient';
+import supabase from '../configs/supabase';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
     // const token = req.headers.authorization?.split(' ')[1];

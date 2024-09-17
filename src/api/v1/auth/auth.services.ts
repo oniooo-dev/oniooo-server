@@ -1,4 +1,4 @@
-import supabase from '../../../configs/SupabaseClient';
+import supabase from '../../../configs/supabase';
 import { createUserDetails } from '../../../db/auth';
 import { UserAuthError } from '../../../types/errors';
 import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
