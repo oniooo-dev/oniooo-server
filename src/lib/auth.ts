@@ -1,4 +1,4 @@
-import supabase from '../configs/SupabaseClient';
+import supabase from '../configs/Supabase';
 import { UserAuthError } from '../types/errors';
 
 export const getCurrentUser = async () => {

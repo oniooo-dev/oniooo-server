@@ -1,0 +1,18 @@
+export async function streamChat(chatInput: string, onData: (chunk: any) => void) {
+    // Instantiate a chat session
+    const chat = generativeModel.startChat();
+
+    // Send a message and receive a stream
+    const result = await chat.sendMessageStream(chatInput);
+
+    // Process the stream
+    for await (const item of result.stream) {
+        const dataChunk = item.candidates && item.candidates[0]?.content.parts[0];
+        console.log('stream chunk: ', dataChunk);
+        onData(dataChunk);
+    }
+
+    // Finish the chat session
+    const aggregatedResponse = await result.response;
+    console.log('Aggregated response: ', JSON.stringify(aggregatedResponse));
+}
