@@ -1,42 +1,58 @@
-import { FunctionDeclarationSchemaType, GenerativeModel, HarmBlockThreshold, HarmCategory, VertexAI } from '@google-cloud/vertexai';
+import dotenv from 'dotenv';
+import { VertexAI, HarmBlockThreshold, HarmCategory, FunctionDeclarationSchemaType } from '@google-cloud/vertexai';
 
-const project = 'your-cloud-project';
+dotenv.config();
+
+const project = 'oniooo-app';
 const location = 'us-central1';
-const textModel = 'gemini-1.5-flash-001';
-// const visionModel = 'gemini-1.0-pro-vision';
+const textModel = 'gemini-1.5-flash';
+const dataStoreId = 'test-melody-datastore_1725667451705';
 
+// Initialize Vertex with your Cloud project and location
 const vertexAI = new VertexAI({ project: project, location: location });
 
-const safetySettings = [{
-    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-    threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-}]
+// Define safety settings for the model
+const safetySettings = [
+    {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+];
 
-const generationConfig = {
-    maxOutputTokens: 256,
-}
+// Define the retrieval tool
+const vertexAIRetrievalTool = {
+    retrieval: {
+        vertexAiSearch: {
+            datastore: `projects/${project}/locations/global/collections/default_collection/dataStores/${dataStoreId}`,
+        },
+        disableAttribution: false,
+    },
+};
 
-const systemInstruction = {
-    role: 'system',
-    parts: [{ "text": `For example, you are a helpful customer service agent.` }]
-}
+const functionDeclarations = [];
 
-// Instantiate Gemini models
-const generativeModel = vertexAI.getGenerativeModel({
+// Instantiate the models
+export const generativeModel = vertexAI.getGenerativeModel({
     model: textModel,
     // The following parameters are optional
     // They can also be passed to individual content generation requests
     safetySettings: safetySettings,
-    generationConfig: generationConfig,
-    systemInstruction: systemInstruction,
+    generationConfig: { maxOutputTokens: 256 },
+    systemInstruction: {
+        role: 'system',
+        parts: [
+            {
+                text: process.env.VERY_COOL_PROMPT as string,
+            },
+        ],
+    },
+    tools: [vertexAIRetrievalTool],
 });
 
-class Melody {
-    generativeModel: GenerativeModel;
-    
-    constructor() {
-        this.generativeModel = generativeModel;
-    }
-}
+export const generativeModelPreview = vertexAI.preview.getGenerativeModel({
+    model: textModel,
+});
 
-export default Melody;
+const googleSearchRetrievalTool = {
+    googleSearchRetrieval: {},
+};

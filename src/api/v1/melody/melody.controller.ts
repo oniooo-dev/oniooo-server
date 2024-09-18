@@ -2,156 +2,97 @@ import { NextFunction, Request, Response } from 'express';
 import * as MelodyService from './melody.services';
 import { MelodyError } from '../../../types/errors';
 
-// Create conversation
-export const createConversationController = async (req: Request, res: Response) => {
-    const { modelId, firstPrompt } = req.body;
-    const newConversation = await MelodyService.createUserConversation(modelId, firstPrompt);
-
-    // ...
-
-    res.status(201).json({
-        message: 'Conversation created',
-    });
-};
-
-export const createOwnedModelController = async (req: Request, res: Response) => {
-    const { modelId } = req.body;
-    const newOwnedModel = await MelodyService.createUserOwnedModel(modelId);
-
-    // ...
-
-    res.status(201).json({
-        message: 'Model saved',
-    });
-};
-
-// Create conversation message
-export const createConversationMessage = (req: Request, res: Response) => {
-    res.status(201).json({
-        message: 'Message created',
-    });
-};
-
-export const fetchOwnedModelsController = async (req: Request, res: Response, next: NextFunction) => {
+// Create chat
+export const createMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Attempt to register the user
-        const userOwnedModels = await MelodyService.fetchUserOwnedModels();
+        const { friend, firstPrompt }: { friend: string; firstPrompt: string } = req.body;
+        const { newChat, newMessage } = await MelodyService.createMelodyChat(friend, firstPrompt);
 
-        // Validate the response from AuthService
-        if (!userOwnedModels) {
+        if (!newChat) {
+            throw new MelodyError(500, 'Internal server error');
+        }
+
+        if (!newMessage) {
             throw new MelodyError(500, 'Internal server error');
         }
 
         res.status(200).json({
-            message: 'Saved models fetched',
-            userOwnedModels: userOwnedModels,
+            newChat,
+            newMessage,
         });
     } catch (error) {
         next(error);
     }
 };
 
-export const fetchModelController = async (req: Request, res: Response, next: NextFunction) => {
+// Fetch chat history
+export const fetchMelodyChats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { modelId } = req.body;
+        const chats = await MelodyService.fetchChats();
 
-        // Attempt to register the user
-        const userOwnedModels = await MelodyService.fetchModel(modelId);
-
-        // Validate the response from AuthService
-        if (!userOwnedModels) {
+        if (!chats) {
             throw new MelodyError(500, 'Internal server error');
         }
 
         res.status(200).json({
-            message: 'Saved models fetched',
-            userOwnedModels: userOwnedModels,
+            chats,
         });
     } catch (error) {
         next(error);
     }
 };
 
-// Fetch conversation history
-export const fetchConversationsController = async (req: Request, res: Response, next: NextFunction) => {
+// Create chat message
+export const createMelodyChatMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const conversations = await MelodyService.fetchUserConversations();
-
-        if (!conversations) {
-            throw new MelodyError(500, 'Internal server error');
-        }
-
+        const { chatId } = req.params;
+        const { message } = req.body;
+        const newMessage = await MelodyService.createChatMessage(chatId, message);
         res.status(200).json({
-            message: 'Conversation history fetched',
-            conversations: conversations,
+            newMessage,
         });
     } catch (error) {
+        console.log(error);
         next(error);
     }
 };
 
-// Fetch messages by conversation ID
-export const fetchConversationMessagesController = (req: Request, res: Response, next: NextFunction) => {
+// Fetch messages by chat ID
+export const fetchMelodyChatMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const conversationId = req.params.conversationId;
-        const systemIconUrl = 'https://i.pinimg.com/736x/3a/6a/56/3a6a56863e245d6f7c33acda19f82916.jpg';
-        const userIconUrl = 'https://i.pinimg.com/550x/b8/22/fd/b822fd5ee0e84c73f5ade20cb68c8099.jpg';
+        const chatId = req.params.chatId;
+        const messages = await MelodyService.fetchChatMessages(chatId);
         res.status(200).json({
-            message: 'Conversation Messages fetched',
-            conversationMessages: [
-                {
-                    id: '1',
-                    iconUrl: systemIconUrl,
-                    senderName: 'Melody',
-                    senderType: 'assistant',
-                    content:
-                        'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1',
-                },
-                {
-                    id: '2',
-                    iconUrl: systemIconUrl,
-                    senderName: 'Melody',
-                    senderType: 'assistant',
-                    content:
-                        'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1',
-                },
-                {
-                    id: '3',
-                    iconUrl: userIconUrl,
-                    senderName: 'Iamfunny123',
-                    senderType: 'user',
-                    content:
-                        'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1',
-                },
-                {
-                    id: '4',
-                    iconUrl: systemIconUrl,
-                    senderName: 'Gemini',
-                    senderType: 'expert',
-                    content:
-                        'Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1 Message 1',
-                },
-            ],
+            messages,
         });
     } catch (error) {
         next(error);
     }
 };
 
-// ...
-// ...
-// ...
-
-// Update conversation title
-export const updateConversationTitle = (req: Request, res: Response) => {
-    res.status(200).json({
-        message: 'Conversation title updated',
-    });
+// Update chat title
+export const updateMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { chatId } = req.params;
+        const { title } = req.body;
+        const updatedChat = await MelodyService.updateChatTitle(chatId, title);
+        res.status(200).json({
+            updatedChat,
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
-// Delete conversation
-export const deleteConversation = (req: Request, res: Response) => {
-    res.status(200).json({
-        message: 'Conversation deleted',
-    });
+// Delete chat
+export const deleteMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { chatId } = req.params;
+        await MelodyService.deleteChat(chatId);
+        res.status(200).json({
+            message: 'Chat deleted',
+        });
+    } catch (error) {
+        next(error);
+    }
 };

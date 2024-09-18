@@ -43,3 +43,4 @@ export const endUserSubscription = async (): Promise<void> => {
         throw new DatabaseError(error.status ? error.status : 500, error.message);
     }
 };
+

@@ -1,4 +1,4 @@
-import { checkValidationErrors, emailValidator, passwordValidator, usernameValidator } from '../lib/inputValidation';
+import { checkValidationErrors, emailValidator, passwordValidator, usernameValidator } from '../lib/inputs';
 
 /**
  * Sanitize Authentication input data
@@ -17,4 +17,4 @@ export const loginInputValidation = [
     emailValidator(),
     passwordValidator(),
     checkValidationErrors(),
-]
+];

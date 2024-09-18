@@ -1,29 +1,18 @@
+import { DatabaseError, UserAuthError } from '../../../types/errors';
+import { UserLoginRequest, UserLoginResponse, UserLogoutRequest, UserLogoutResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
 import supabase from '../../../configs/supabase';
-import { createUserDetails } from '../../../db/auth';
-import { UserAuthError } from '../../../types/errors';
-import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
 
 export const register = async (register: UserRegisterRequest): Promise<UserRegisterResponse> => {
-    // Manage 1-day free trial for new users
-
-    // Set trial start date to current date
-    const trialStartDate = new Date();
-
-    // Set the trial end date to one day later
-    const trialEndDate = new Date(trialStartDate);
-    trialEndDate.setDate(trialStartDate.getDate() + 1);
+    const { username, email, password } = register;
 
     const user_metadata = {
-        username: register.username,
-        role: 'trial_user',
-        trial_start: trialStartDate.toISOString(),
-        trial_end: trialEndDate.toISOString(),
+        username: username,
         icon_url: 'https://i.pinimg.com/originals/31/12/1c/31121c89d6a0f08709c344f84ae5f5ff.jpg',
     };
 
     const { data, error } = await supabase.auth.signUp({
-        email: register.email,
-        password: register.password,
+        email: email,
+        password: password,
         options: {
             data: user_metadata,
         },
@@ -38,15 +27,25 @@ export const register = async (register: UserRegisterRequest): Promise<UserRegis
     }
 
     // Create user details entry in the database
-    createUserDetails(data.user.id, data.user.user_metadata.username as string);
+    const { data: userData, error: dbError } = await supabase.from('users').insert([
+        {
+            user_id: data.user.id,
+            username: username,
+            email: email,
+            icon_url: user_metadata.icon_url,
+        },
+    ]);
+
+    if (dbError) {
+        throw new DatabaseError(500, 'Failed to create user details');
+    }
 
     // Return data to the client-side
     const user = {
-        id: data.user.id,
-        username: data.user.user_metadata.username as string,
+        user_id: data.user.id,
+        username: data.user.user_metadata.username,
         email: data.user.email,
-        role: data.user.user_metadata.role as string,
-        icon_url: data.user.user_metadata.icon_url as string,
+        icon_url: data.user.user_metadata.icon_url,
     };
 
     const accessToken = data.session?.access_token;
@@ -70,11 +69,11 @@ export const login = async (login: UserLoginRequest): Promise<UserLoginResponse>
     }
 
     const user = {
-        id: data.user.id,
-        username: data.user.user_metadata.username as string,
+        user_id: data.user.id,
+        username: data.user.user_metadata.username,
         email: data.user.email,
-        role: data.user.user_metadata.role as string,
-        icon_url: data.user.user_metadata.icon_url as string,
+        role: data.user.user_metadata.role,
+        icon_url: data.user.user_metadata.icon_url,
     };
 
     const accessToken = data.session.access_token;
@@ -87,7 +86,7 @@ export const login = async (login: UserLoginRequest): Promise<UserLoginResponse>
     return { user: user, accessToken: accessToken, refreshToken: refreshToken };
 };
 
-export const logout = async () => {
+export const logout = async (params: UserLogoutRequest): Promise<UserLogoutResponse> => {
     try {
         const { error } = await supabase.auth.signOut();
 

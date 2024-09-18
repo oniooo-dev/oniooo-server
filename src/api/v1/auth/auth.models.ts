@@ -20,3 +20,9 @@ export interface UserLoginResponse {
     accessToken: string | undefined;
     refreshToken: string | undefined;
 }
+
+export interface UserLogoutRequest {}
+
+export interface UserLogoutResponse {
+    message: string;
+}
