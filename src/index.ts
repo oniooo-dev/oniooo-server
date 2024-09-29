@@ -5,11 +5,13 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import apiVersion1 from './api/api.routes';
 import { errorHandler } from './middleware/handlers';
-import { createServer } from 'http';
+import https from 'https';
+import http from 'http';
 import { Melody } from './configs/vertex/vertex';
 import { getCurrentUser } from './lib/auth';
 import { saveMessageToDatabase } from './lib/messages';
 import createSocketServer from './lib/sockets';
+import fs from 'fs';
 
 // Load environment variables
 dotenv.config();
@@ -19,12 +21,22 @@ const port = process.env.PORT || 8080;
 const allowedOrigins = [
     'https://oniooo.com',
     'https://www.oniooo.com',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'https://api.oniooo.com',
 ];
 
-// Use environment variable if available, otherwise use the allowedOrigins array
-const corsOrigin = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : allowedOrigins;
+let options;
+try {
+    options = {
+        key: fs.readFileSync('/etc/letsencrypt/live/api.oniooo.com/privkey.pem'),
+        cert: fs.readFileSync('/etc/letsencrypt/live/api.oniooo.com/fullchain.pem')
+    };
+} catch (err) {
+    console.error('Error reading SSL files:', err);
+    process.exit(1);
+}
 
+// Use environment variable if available, otherwise use the allowedOrigins array
 const corsOptions: cors.CorsOptions = {
     origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -40,7 +52,7 @@ const corsOptions: cors.CorsOptions = {
 
 // Express server
 const app: Express = express();
-const server = createServer(app);
+const server = https.createServer(options, app);
 const io = createSocketServer(server);
 
 // CORS
@@ -66,6 +78,12 @@ app.use(errorHandler);
 server.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
+// HTTP to HTTPS redirection
+http.createServer((req, res) => {
+    res.writeHead(301, { "Location": "https://" + req.headers['host'] + req.url });
+    res.end();
+}).listen(80);
 
 io.on('connection', (socket) => {
     console.log('Client connected');
