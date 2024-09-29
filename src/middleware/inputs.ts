@@ -1,4 +1,4 @@
-import { checkValidationErrors, emailValidator, passwordValidator, usernameValidator } from '../lib/inputs';
+import { checkValidationErrors, emailValidator, passwordValidator, usernameValidator } from '../utils/inputs';
 
 /**
  * Sanitize Authentication input data

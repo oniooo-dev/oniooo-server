@@ -1,10 +1,9 @@
-import supabase from '../../../configs/supabase';
-import { generativeModel } from '../../../configs/vertex';
+import supabase from '../../../configs/supabase/supabase';
+import { generativeModel } from '../../../configs/vertex/vertex';
 import { getCurrentUser } from '../../../lib/auth';
 import { DatabaseError } from '../../../types/errors';
-import { MelodyChat, MelodyMessage } from '../../../types/types';
 
-export const createMelodyChat = async (friend: string, firstPrompt: string) => {
+export const createMelodyChat = async (firstPrompt: string) => {
     // Get the current user's ID
     const userId = (await getCurrentUser()).user_id;
 
@@ -27,7 +26,7 @@ export const createMelodyChat = async (friend: string, firstPrompt: string) => {
 
     const { data, error: dbError } = await supabase
         .from('melody_chats')
-        .insert([{ user_id: userId, friend, title }])
+        .insert([{ user_id: userId, title: title }])
         .select();
 
     if (dbError) {
@@ -40,7 +39,6 @@ export const createMelodyChat = async (friend: string, firstPrompt: string) => {
         started_at: data[0].started_at,
         last_active: data[0].last_active,
         user_id: 'SIKE',
-        friend: data[0].friend,
         title: data[0].title,
     };
 
@@ -82,7 +80,6 @@ export const fetchChats = async () => {
             started_at: chat.started_at,
             last_active: chat.last_active,
             user_id: chat.user_id,
-            friend: chat.friend,
             title: chat.title,
         };
     });

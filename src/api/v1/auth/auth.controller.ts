@@ -1,10 +1,10 @@
+import dotenv from 'dotenv';
 import { Request, Response } from 'express';
+import supabase from '../../../configs/supabase/supabase';
 import { authAsyncHandler } from '../../../middleware/handlers';
 import { UserAuthError } from '../../../types/errors';
 import { UserLoginRequest, UserLoginResponse, UserRegisterRequest, UserRegisterResponse } from './auth.models';
 import * as AuthService from './auth.services';
-import supabase from '../../../configs/supabase';
-import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -78,11 +78,7 @@ export const handleOAuthCallback = authAsyncHandler(async (req: Request, res: Re
     res.redirect(303, next.toString());
 });
 
-export const verifyEmail = authAsyncHandler(async (req: Request, res: Response) => {
-    // ...
-});
-
-export const forgotPassword = authAsyncHandler(async (req: Request, res: Response) => {
+export const sendPasswordResetEmail = authAsyncHandler(async (req: Request, res: Response) => {
     // ...
 });
 

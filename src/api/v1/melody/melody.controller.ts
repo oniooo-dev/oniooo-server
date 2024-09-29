@@ -5,8 +5,8 @@ import { MelodyError } from '../../../types/errors';
 // Create chat
 export const createMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { friend, firstPrompt }: { friend: string; firstPrompt: string } = req.body;
-        const { newChat, newMessage } = await MelodyService.createMelodyChat(friend, firstPrompt);
+        const { firstPrompt }: { firstPrompt: string } = req.body;
+        const { newChat, newMessage } = await MelodyService.createMelodyChat(firstPrompt);
 
         if (!newChat) {
             throw new MelodyError(500, 'Internal server error');
