@@ -1,4 +1,4 @@
-import supabase from "../configs/supabase/supabase";
+import supabase from "../config/supabase/supabase";
 import { DatabaseError } from "../types/errors";
 
 export async function saveMessageToDatabase(chatId: string, userId: string, content: string) {

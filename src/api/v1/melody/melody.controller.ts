@@ -5,8 +5,10 @@ import { MelodyError } from '../../../types/errors';
 // Create chat
 export const createMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const userId = req.user?.user_id as string;
+
         const { firstPrompt }: { firstPrompt: string } = req.body;
-        const { newChat, newMessage } = await MelodyService.createMelodyChat(firstPrompt);
+        const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt);
 
         if (!newChat) {
             throw new MelodyError(500, 'Internal server error');
@@ -28,7 +30,9 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
 // Fetch chat history
 export const fetchMelodyChats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const chats = await MelodyService.fetchChats();
+        const userId = req.user?.user_id as string;
+
+        const chats = await MelodyService.fetchChats(userId);
 
         if (!chats) {
             throw new MelodyError(500, 'Internal server error');
@@ -45,9 +49,11 @@ export const fetchMelodyChats = async (req: Request, res: Response, next: NextFu
 // Create chat message
 export const createMelodyChatMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const userId = req.user?.user_id as string;
+
         const { chatId } = req.params;
         const { message } = req.body;
-        const newMessage = await MelodyService.createChatMessage(chatId, message);
+        const newMessage = await MelodyService.createChatMessage(userId, chatId, message);
         res.status(200).json({
             newMessage,
         });
@@ -60,8 +66,9 @@ export const createMelodyChatMessage = async (req: Request, res: Response, next:
 // Fetch messages by chat ID
 export const fetchMelodyChatMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const userId = req.user?.user_id as string;
         const chatId = req.params.chatId;
-        const messages = await MelodyService.fetchChatMessages(chatId);
+        const messages = await MelodyService.fetchChatMessages(userId, chatId);
         res.status(200).json({
             messages,
         });

@@ -1,27 +1,56 @@
 import { Request, Response, NextFunction } from 'express';
-import supabase from '../configs/supabase/supabase';
+import { supabase } from '../config/supabase/supabase';
 
+declare global {
+    namespace Express {
+        interface Request {
+            user?: User;
+        }
+    }
+}
+
+// Authentication Middleware
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
-    // const token = req.headers.authorization?.split(' ')[1];
+    try {
+        // Verify the access token
+        const token = req.cookies.access_token;
 
-    // if (!token) {
-    //     return res.status(401).json({ message: 'Authorization token is required' });
-    // }
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
 
-    // const { data, error } = await supabase.auth.getUser(token);
+        // Get user from Supabase Auth
+        const { data: { user }, error } = await supabase.auth.getUser(token);
 
-    // if (error) {
-    //     return res.status(401).json({ message: 'Invalid or expired token' });
-    // }
+        if (error || !user) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
 
-    // const user = {
-    //     id: data.user.id,
-    //     username: data.user.user_metadata.username as string,
-    //     email: data.user.email,
-    //     icon_url: data.user.user_metadata.icon_url as string,
-    //     role: data.user.user_metadata.role as string,
-    // };
+        // Grab user from Supabase Database
+        const { data: userData, error: dbError } = await supabase
+            .from('users')
+            .select()
+            .eq('user_id', user.id)
+            .single();
 
-    // req.user = user;
-    next();
+        if (dbError || !userData) {
+            return res.status(500).json({ message: 'Internal Server Error' })
+        }
+
+        // Return the user to the Client
+        const authUser: User = {
+            user_id: userData.user_id,
+            username: userData.username,
+            email: userData.email,
+            icon_url: userData.icon_url,
+            mochi_balance: userData.mochi_balance,
+        }
+
+        // Attach the authenticated user's information to the incoming HTTP request object
+        req.user = authUser;
+        next();
+    } catch (error) {
+        console.error('Authentication middleware error:', error);
+        return res.status(500).json({ message: 'Internal Server Error' });
+    }
 };

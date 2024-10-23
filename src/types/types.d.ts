@@ -1,5 +1,6 @@
 // Don't play around with the user id
 type User = {
+    user_id: string;
     username: string;
     email: string | undefined;
     icon_url: string | undefined;

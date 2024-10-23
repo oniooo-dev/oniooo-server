@@ -1,12 +1,8 @@
-import supabase from '../../../configs/supabase/supabase';
-import { generativeModel } from '../../../configs/vertex/vertex';
-import { getCurrentUser } from '../../../lib/auth';
+import { supabase } from '../../../config/supabase/supabase';
+import { generativeModel } from '../../../config/vertex/vertex';
 import { DatabaseError } from '../../../types/errors';
 
-export const createMelodyChat = async (firstPrompt: string) => {
-    // Get the current user's ID
-    const userId = (await getCurrentUser()).user_id;
-
+export const createMelodyChat = async (userId: string, firstPrompt: string) => {
     // Generate a chat title based on the first prompt
     const generateTitleRequest = {
         contents: [
@@ -64,11 +60,12 @@ export const createMelodyChat = async (firstPrompt: string) => {
     return { newChat, newMessage };
 };
 
-export const fetchChats = async () => {
-    // Get the current user's ID
-    const userId = (await getCurrentUser()).user_id;
-
-    const { data, error: dbError } = await supabase.from('melody_chats').select('*').eq('user_id', userId).order('last_active', { ascending: false });
+export const fetchChats = async (userId: string) => {
+    const { data, error: dbError } = await supabase
+        .from('melody_chats')
+        .select('*')
+        .eq('user_id', userId)
+        .order('last_active', { ascending: false });
 
     if (dbError) {
         throw new DatabaseError(500, 'Error fetching chats');
@@ -87,9 +84,7 @@ export const fetchChats = async () => {
     return chats;
 };
 
-export const createChatMessage = async (chatId: string, message: string) => {
-    const userId = (await getCurrentUser()).user_id;
-
+export const createChatMessage = async (userId: string, chatId: string, message: string) => {
     // Insert the new message into the database
     const { data, error: dbError } = await supabase
         .from('melody_messages')
@@ -113,17 +108,23 @@ export const createChatMessage = async (chatId: string, message: string) => {
     return newMessage;
 };
 
-export const fetchChatMessages = async (chatId: string) => {
-    const userId = (await getCurrentUser()).user_id;
-
+export const fetchChatMessages = async (userId: string, chatId: string) => {
     // Check if the user is a participant in the chat
-    const { error: dbError } = await supabase.from('melody_chats').select('*').eq('chat_id', chatId).eq('user_id', userId);
+    const { error: dbError } = await supabase
+        .from('melody_chats')
+        .select('*')
+        .eq('chat_id', chatId)
+        .eq('user_id', userId);
 
     if (dbError) {
         throw new DatabaseError(500, 'Error fetching chat');
     }
 
-    const { data, error: anotherError } = await supabase.from('melody_messages').select('*').eq('chat_id', chatId);
+    const { data, error: anotherError } = await supabase
+        .from('melody_messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true });
 
     if (anotherError) {
         throw new DatabaseError(500, 'Error fetching messages');

@@ -1,4 +1,4 @@
-import supabase from '../configs/supabase/supabase';
+import supabase from '../config/supabase/supabase';
 
 // Adding Mochis
 export async function addMochiBalance(userId: string, amount: number) {
