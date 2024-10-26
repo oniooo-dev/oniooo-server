@@ -1,12 +1,12 @@
 import express, { Express } from 'express';
 import http from 'http';
 import https from 'https';
-import { port } from './config'
-import apiVersion1 from './api/v1';
 import { Server as SocketIOServer } from 'socket.io';
+import apiVersion1 from './api/v1';
+import { port } from './config';
+import { setupMiddleware } from './middlewares';
+import { setupWebSocket } from './sockets/handlers/socketHandler';
 import { loadSSLCertificates } from './utils/ssl';
-import { setupMiddleware } from './middleware';
-import { setupWebSocket } from './sockets/socketHandler';
 
 // Initialize Express server
 const app: Express = express();

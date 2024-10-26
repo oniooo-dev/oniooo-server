@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/supabase/supabase';
+import { supabase } from '../config/supabase';
 
 declare global {
     namespace Express {
@@ -12,8 +12,10 @@ declare global {
 // Authentication Middleware
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Verify the access token
-        const token = req.cookies.access_token;
+        // Look for the token in cookies, headers, or query params
+        const token = req.cookies.access_token ||
+            req.headers['authorization']?.split(' ')[1] ||
+            req.query.token;
 
         if (!token) {
             return res.status(401).json({ message: 'Unauthorized' });
@@ -39,11 +41,11 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
         // Return the user to the Client
         const authUser: User = {
-            user_id: userData.user_id,
+            userId: userData.user_id,
             username: userData.username,
             email: userData.email,
-            icon_url: userData.icon_url,
-            mochi_balance: userData.mochi_balance,
+            iconUrl: userData.icon_url,
+            mochiBalance: userData.mochi_balance,
         }
 
         // Attach the authenticated user's information to the incoming HTTP request object

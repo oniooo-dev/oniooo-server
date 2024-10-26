@@ -1,10 +1,15 @@
-// Don't play around with the user id
+/**
+ * 
+ * Type definitions for the project
+ * 
+*/
+
 type User = {
-    user_id: string;
+    userId: string;
     username: string;
     email: string | undefined;
-    icon_url: string | undefined;
-    mochi_balance: number;
+    iconUrl: string | undefined;
+    mochiBalance: number;
 };
 
 type MelodyChat = {

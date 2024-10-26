@@ -1,6 +1,11 @@
-import { supabase } from '../../../config/supabase/supabase';
-import { generativeModel } from '../../../config/vertex/vertex';
+/**
+ * Service Layer for Melody API Route
+*/
+
+import { supabase } from '../../../config/supabase';
+import { generativeModel } from '../../../config/vertex/vertexSingleton';
 import { DatabaseError } from '../../../types/errors';
+import { loadMessagesFromDatabase } from '../../../utils/messages';
 
 export const createMelodyChat = async (userId: string, firstPrompt: string) => {
     // Generate a chat title based on the first prompt
@@ -109,39 +114,7 @@ export const createChatMessage = async (userId: string, chatId: string, message:
 };
 
 export const fetchChatMessages = async (userId: string, chatId: string) => {
-    // Check if the user is a participant in the chat
-    const { error: dbError } = await supabase
-        .from('melody_chats')
-        .select('*')
-        .eq('chat_id', chatId)
-        .eq('user_id', userId);
-
-    if (dbError) {
-        throw new DatabaseError(500, 'Error fetching chat');
-    }
-
-    const { data, error: anotherError } = await supabase
-        .from('melody_messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
-
-    if (anotherError) {
-        throw new DatabaseError(500, 'Error fetching messages');
-    }
-
-    const messages: MelodyMessage[] = data.map((message: any) => {
-        return {
-            message_id: message.message_id,
-            created_at: message.created_at,
-            chat_id: message.chat_id,
-            user_id: message.user_id,
-            type: message.type,
-            content: message.content,
-        };
-    });
-
-    return messages;
+    return await loadMessagesFromDatabase(userId, chatId);
 };
 
 export const updateChatTitle = async (chatId: string, title: string) => {

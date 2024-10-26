@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createMelodyChat, fetchMelodyChats, createMelodyChatMessage, fetchMelodyChatMessages, updateMelodyChat, deleteMelodyChat } from './melody.controller';
+import { createMelodyChat, fetchMelodyChats, createMelodyChatMessage, fetchMelodyChatMessages, updateMelodyChat, deleteMelodyChat } from './melody.controllers';
 
 const melodyRoutes = Router();
 

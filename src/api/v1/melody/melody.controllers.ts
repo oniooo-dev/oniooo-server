@@ -1,3 +1,7 @@
+/**
+ * Controller Layer for Melody API Route
+*/
+
 import { NextFunction, Request, Response } from 'express';
 import * as MelodyService from './melody.services';
 import { MelodyError } from '../../../types/errors';
@@ -5,7 +9,7 @@ import { MelodyError } from '../../../types/errors';
 // Create chat
 export const createMelodyChat = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user?.user_id as string;
+        const userId = req.user?.userId as string;
 
         const { firstPrompt }: { firstPrompt: string } = req.body;
         const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt);
@@ -30,7 +34,7 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
 // Fetch chat history
 export const fetchMelodyChats = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user?.user_id as string;
+        const userId = req.user?.userId as string;
 
         const chats = await MelodyService.fetchChats(userId);
 
@@ -49,7 +53,7 @@ export const fetchMelodyChats = async (req: Request, res: Response, next: NextFu
 // Create chat message
 export const createMelodyChatMessage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user?.user_id as string;
+        const userId = req.user?.userId as string;
 
         const { chatId } = req.params;
         const { message } = req.body;
@@ -66,7 +70,7 @@ export const createMelodyChatMessage = async (req: Request, res: Response, next:
 // Fetch messages by chat ID
 export const fetchMelodyChatMessages = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const userId = req.user?.user_id as string;
+        const userId = req.user?.userId as string;
         const chatId = req.params.chatId;
         const messages = await MelodyService.fetchChatMessages(userId, chatId);
         res.status(200).json({
