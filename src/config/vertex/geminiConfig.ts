@@ -74,7 +74,7 @@ export const functionDeclarations: Tool[] = [
                             type: FunctionDeclarationSchemaType.INTEGER
                         }
                     },
-                    required: ['prompt', 'num_images'],
+                    required: ['prompt', 'num_images'], // yo
                 }
             },
             {
