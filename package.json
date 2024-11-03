@@ -12,7 +12,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@anthropic-ai/vertex-sdk": "^0.5.1",
+    "@fal-ai/client": "^1.0.2",
     "@fal-ai/serverless-client": "^0.14.3",
+    "@google-cloud/storage": "^7.13.0",
     "@google-cloud/vertexai": "^1.7.0",
     "@redis/client": "^1.6.0",
     "@supabase/supabase-js": "^2.45.1",

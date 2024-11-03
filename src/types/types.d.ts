@@ -1,7 +1,5 @@
 /**
- * 
  * Type definitions for the project
- * 
 */
 
 type User = {
@@ -18,6 +16,7 @@ type MelodyChat = {
     last_active: string;
     user_id: string;
     title: string;
+    model_name: "flash" | "claude";
 };
 
 type MelodyMessage = {
@@ -25,6 +24,9 @@ type MelodyMessage = {
     created_at: string;
     chat_id: string;
     user_id: string;
-    type: MessageType;
+    type: "USER_TEXT" | "USER_FILE" | "SYSTEM_TEXT" | "SYSTEM_FILE";
     content: string;
 };
+
+// Union type for the Model Instances
+type ModelInstance = GenerativeModel | AnthropicVertex;

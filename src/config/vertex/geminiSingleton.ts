@@ -3,7 +3,7 @@
 */
 
 import { VertexAI, GenerativeModel } from '@google-cloud/vertexai';
-import { vertexAIConfig, safetySettings, generationConfig, systemInstruction } from './vertexConfig';
+import { vertexAIConfig, safetySettings, generationConfig, systemInstruction, googleSearchRetrievalTool } from './geminiConfig';
 
 // Initialize VertexAI instance
 const vertexAI = new VertexAI({
@@ -26,7 +26,7 @@ class GenerativeModelSingleton {
                 safetySettings: safetySettings,
                 generationConfig: generationConfig,
                 systemInstruction: systemInstruction,
-                // tools: [googleSearchRetrievalTool], // Uncomment if needed
+                // tools: [googleSearchRetrievalTool],
             });
         }
         return GenerativeModelSingleton.instance;

@@ -21,6 +21,22 @@ export async function saveMessageToDatabase(chatId: string, userId: string, cont
     return data;
 }
 
+// Save a text message from Melody
+export async function saveMelodyFileToDatabase(chatId: string, userId: string, content: string) {
+    const { data, error } = await supabase
+        .from('melody_messages')
+        .insert([{ chat_id: chatId, user_id: userId, type: 'SYSTEM_FILE', content }])
+        .select();
+
+    if (error) {
+        console.log('Error creating message:', error);
+        throw new DatabaseError(500, 'Error creating message');
+    }
+
+    console.log('Message saved to Supabase:', data);
+    return data;
+}
+
 // Fetch messages of chat by id
 export async function loadMessagesFromDatabase(userId: string, chatId: string) {
     // Check if the user is a participant in the chat

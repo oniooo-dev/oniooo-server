@@ -2,7 +2,9 @@
  * Melody Module Implementation
 */
 
-import { generativeModel } from "../config/vertex";
+import { Socket } from "socket.io";
+import { generativeModel } from "../../config/vertex";
+import { claudeModel } from "../../config/vertex";
 import { ChatManager } from "./managers/ChatManager";
 
 export class Melody {
@@ -10,7 +12,7 @@ export class Melody {
 
     // Constructor
     constructor(userId: string) {
-        this.chatManager = new ChatManager(userId);  // Inject ChatManager
+        this.chatManager = new ChatManager(userId, claudeModel);        // Inject ChatManager
     }
 
     /**
@@ -33,10 +35,13 @@ export class Melody {
      * @param prompt - The message prompt to send.
      * @returns - The response from the model.
      */
-    async generateContent(prompt: string): Promise<string> {
+    async generateContent(prompt: string, socket: Socket, chatId: string): Promise<void> {
         try {
-            const output = await this.chatManager.sendMessage(prompt);
-            return output;  // Text output
+            // Update on state
+            socket.emit('melody_state_update', { state: "TYPING" });
+
+            // Dispatch Request to ChatManager
+            await this.chatManager.sendMessage(prompt, socket, chatId);
         } catch (error) {
             console.error('Error in generateContent:', error);
             throw error;

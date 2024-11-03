@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../../config/supabase';
-import { Melody } from '../../models/Melody';
+import { Melody } from '../../models/melody';
 
 // Extend the Socket type to include a custom userId property
 export interface AuthSocket extends Socket {

@@ -3,11 +3,11 @@
 */
 
 import { supabase } from '../../../config/supabase';
-import { generativeModel } from '../../../config/vertex/vertexSingleton';
+import { generativeModel } from '../../../config/vertex/geminiSingleton';
 import { DatabaseError } from '../../../types/errors';
 import { loadMessagesFromDatabase } from '../../../utils/messages';
 
-export const createMelodyChat = async (userId: string, firstPrompt: string) => {
+export const createMelodyChat = async (userId: string, firstPrompt: string, modelName: "flash" | "claude") => {
     // Generate a chat title based on the first prompt
     const generateTitleRequest = {
         contents: [
@@ -27,7 +27,7 @@ export const createMelodyChat = async (userId: string, firstPrompt: string) => {
 
     const { data, error: dbError } = await supabase
         .from('melody_chats')
-        .insert([{ user_id: userId, title: title }])
+        .insert([{ user_id: userId, title: title, model_name: modelName }])
         .select();
 
     if (dbError) {
@@ -41,6 +41,7 @@ export const createMelodyChat = async (userId: string, firstPrompt: string) => {
         last_active: data[0].last_active,
         user_id: 'SIKE',
         title: data[0].title,
+        model_name: modelName
     };
 
     // Append the first message to the chat
@@ -83,6 +84,7 @@ export const fetchChats = async (userId: string) => {
             last_active: chat.last_active,
             user_id: chat.user_id,
             title: chat.title,
+            model_name: chat.model_name
         };
     });
 

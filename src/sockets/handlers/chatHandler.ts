@@ -2,7 +2,6 @@
  * Handlers for Chat Interaction
 */
 
-import { saveMessageToDatabase } from "../../utils/messages";
 import { AuthSocket } from "./authHandler";
 
 interface ChatMessage {
@@ -33,18 +32,29 @@ export const handleChatInteration = (socket: AuthSocket) => {
                 throw new Error('Melody Instantiation required');
             }
 
-            const response = await socket.melody.generateContent(prompt);
-            socket.emit('receive_melody_message', { text: response });
-
-            // Attempt saving the message to Supabase
-            console.log('Saving message for user:', socket.userId);
-            saveMessageToDatabase(chatId, socket.userId, response);
+            // Request to Melody
+            await socket.melody.generateContent(prompt, socket, chatId);
         } catch (error: any) {
             console.error('Error during message streaming:', error);
             socket.emit('error', error.message);
         }
     });
 };
+
+export const handleChangeModel = (socket: AuthSocket) => {
+    socket.on('change_model', async (modelName: string) => {
+        if (!modelName) {
+            socket.emit('error', 'modelName is missing');
+            return;
+        }
+
+        try {
+
+        } catch (error) {
+
+        }
+    })
+}
 
 // Handle new chat selection
 export const handleChangeChat = (socket: AuthSocket) => {

@@ -11,8 +11,8 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
     try {
         const userId = req.user?.userId as string;
 
-        const { firstPrompt }: { firstPrompt: string } = req.body;
-        const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt);
+        const { firstPrompt, modelName }: { firstPrompt: string, modelName: "flash" | "claude" } = req.body;
+        const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt, modelName);
 
         if (!newChat) {
             throw new MelodyError(500, 'Internal server error');
@@ -58,6 +58,8 @@ export const createMelodyChatMessage = async (req: Request, res: Response, next:
         const { chatId } = req.params;
         const { message } = req.body;
         const newMessage = await MelodyService.createChatMessage(userId, chatId, message);
+
+        // Send to Client
         res.status(200).json({
             newMessage,
         });
