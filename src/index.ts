@@ -19,7 +19,9 @@ setupMiddleware(app);
 app.use('/api/v1/', apiVersion1);
 
 // Create and configure the Socket.IO server
-const io = new SocketIOServer(server);
+const io = new SocketIOServer(server, {
+    path: '/socket.io'
+});
 setupWebSocket(io);
 
 // Start listening to requests
