@@ -8,7 +8,7 @@ import { AnthropicVertex } from '@anthropic-ai/vertex-sdk';
 import { functionDeclarations } from '../../../config/vertex/geminiConfig';
 import { fluxPro, fluxSchnell } from '../../../config/minions/fal';
 import { AuthSocket } from '../../../sockets/handlers/authHandler';
-import { luma } from '../../../config/minions/piapi';
+import { luma, suno } from '../../../config/minions/piapi';
 import { convertToGsUri, getMimeType } from '../../../utils/utils';
 import { generativeModel } from '../../../config/vertex/geminiSingleton';
 
@@ -259,6 +259,30 @@ export class ChatManager {
                                 'prompt' in functionCallArgs && typeof functionCallArgs.prompt === 'string'
                             ) {
                                 const result: any = await luma(functionCallArgs.prompt);
+
+                                videoUri = await result;
+
+                                console.log(await videoUri);
+                            } else {
+                                console.error('Prompt is not available or not a string');
+                            }
+                        }
+                        else if (functionCallName === "suno") {
+
+                            // Extract function call arguments
+                            const functionCallArgs = part.functionCall.args;
+
+                            console.log("CALLLLLLLLING SUNO .......");
+
+                            let videoUri;
+
+                            // Update on state
+                            socket.emit('melody_state_update', { state: "GENERATING_MUSIC" });
+
+                            if (
+                                'prompt' in functionCallArgs && typeof functionCallArgs.prompt === 'string'
+                            ) {
+                                const result: any = await suno(functionCallArgs.prompt);
 
                                 videoUri = await result;
 

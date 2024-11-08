@@ -93,7 +93,7 @@ export const functionDeclarations: Tool[] = [
             },
             {
                 name: "suno",
-                description: 'Generate song/music from a text prompt.',
+                description: 'Generate a song or music from a text prompt.',
                 parameters: {
                     type: FunctionDeclarationSchemaType.OBJECT,
                     properties: {
