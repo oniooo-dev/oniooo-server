@@ -139,15 +139,41 @@ export const suno = async (prompt: string) => {
                     console.log(`Polling task ${taskId}, status: ${taskStatus}`);
 
                     if (taskStatus === 'completed') {
-                        const videoUrl = taskData.output.video.url;
-                        clearInterval(intervalId);
-                        console.log(`Task ${taskId} completed. Video URL: ${videoUrl}`);
-                        resolve(videoUrl);
+                        // Task completed successfully
+                        const clips = taskData.output.clips;
+                        const clipKeys = Object.keys(clips);
+
+                        if (clipKeys.length === 0) {
+                            clearInterval(intervalId);
+                            console.error(`Task ${taskId} completed but no clips found.`);
+                            reject(new Error(`Task ${taskId} completed but no clips found.`));
+                            return;
+                        }
+
+                        // Assuming you want the first clip's video_url
+                        const firstClipKey = clipKeys[0];
+                        const firstClip = clips[firstClipKey];
+                        const videoUrl = firstClip.video_url;
+
+                        if (videoUrl) {
+                            clearInterval(intervalId);
+                            console.log(`Task ${taskId} completed. Video URL: ${videoUrl}`);
+                            resolve(videoUrl); // Resolve the promise with the videoUrl
+                        } else {
+                            clearInterval(intervalId);
+                            console.error(`Task ${taskId} completed but no video URL found.`);
+                            reject(new Error(`Task ${taskId} completed but no video URL found.`));
+                        }
                     } else if (taskStatus === 'failed') {
+                        // Task failed
                         clearInterval(intervalId);
                         console.error(`Task ${taskId} failed.`);
                         reject(new Error(`Task ${taskId} failed.`));
+                    } else {
+                        // Task is still in progress
+                        console.log(`Task ${taskId} is still in progress.`);
                     }
+
                     // You can handle other statuses if necessary
                 } catch (error) {
                     console.error(`Error checking status of task ${taskId}:`, error);
