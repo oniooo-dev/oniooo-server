@@ -24,7 +24,7 @@ export const luma = async (prompt: string) => {
     };
 
     try {
-        const response = await axios.post('https://api.piapi.ai/api/v1/task', data, {
+        let response = await axios.post('https://api.piapi.ai/api/v1/task', data, {
             headers: {
                 'X-API-KEY': process.env.PIAPI_KEY
             }
@@ -32,6 +32,8 @@ export const luma = async (prompt: string) => {
 
         console.log(`POST /task status: ${response.status}`);
         console.log(`Task created:`, response.data);
+
+        response = response.data
 
         const taskId = response.data.task_id;
 
