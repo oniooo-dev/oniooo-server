@@ -15,7 +15,7 @@ export const createMelodyChat = async (userId: string, firstPrompt: string, mode
                 role: 'user',
                 parts: [
                     {
-                        text: `Generate a title with some emojis of ONLY 3 to 8 words based on the following first prompt from the user:[${firstPrompt}]`,
+                        text: `Generate a title with some emojis of ONLY 3 to 8 words based on the following first prompt from the user:[${firstPrompt}], Please only output the title string.`,
                     },
                 ],
             },
