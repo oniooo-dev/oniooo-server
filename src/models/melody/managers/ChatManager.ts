@@ -263,6 +263,13 @@ export class ChatManager {
                                 videoUri = await result;
 
                                 console.log(await videoUri);
+
+                                // Send the text part to the frontend
+                                socket.emit('receive_melody_message', { fileUri: videoUri });
+
+                                // Attempt saving the message to Supabase
+                                console.log('Saving file message for user:', socket.userId);
+                                saveMelodyFileToDatabase(chatId, socket.userId, videoUri);
                             } else {
                                 console.error('Prompt is not available or not a string');
                             }
