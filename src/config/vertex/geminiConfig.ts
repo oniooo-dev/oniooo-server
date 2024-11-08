@@ -45,12 +45,13 @@ export const googleSearchRetrievalTool = {
     },
 };
 
+// Functions Gemini can call
 export const functionDeclarations: Tool[] = [
     {
         functionDeclarations: [
             {
                 name: "fluxPro",
-                description: 'Best for realistic images, or when the prompt involves fine detail, high fidelity, or text within images',
+                description: 'Text to Image Generation. Best for realistic images, or when the prompt involves fine detail, high fidelity, or text within images',
                 parameters: {
                     type: FunctionDeclarationSchemaType.OBJECT,
                     properties: {
@@ -63,7 +64,7 @@ export const functionDeclarations: Tool[] = [
             },
             {
                 name: "fluxSchnell",
-                description: 'Demands that need to quickly generate lots of images that don’t need to be very detailed but must be produced in bulk to have quicker results and lower cost.',
+                description: 'Text to Image Generation. Demands that need to quickly generate lots of images that do not need to be very detailed but must be produced in bulk (MAX: 4 images) to have quicker results and lower cost.',
                 parameters: {
                     type: FunctionDeclarationSchemaType.OBJECT,
                     properties: {
@@ -74,18 +75,53 @@ export const functionDeclarations: Tool[] = [
                             type: FunctionDeclarationSchemaType.INTEGER
                         }
                     },
-                    required: ['prompt', 'num_images'], // yo
+                    required: ['prompt'],
                 }
             },
             {
-                name: "kling",
-                description: 'Text to Video Generation',
+                name: "luma",
+                description: 'Generate a video from a text prompt.',
                 parameters: {
                     type: FunctionDeclarationSchemaType.OBJECT,
                     properties: {
                         prompt: {
                             type: FunctionDeclarationSchemaType.STRING
                         },
+                    },
+                    required: ['prompt'],
+                }
+            },
+            {
+                name: "suno",
+                description: 'Generate song/music from a text prompt.',
+                parameters: {
+                    type: FunctionDeclarationSchemaType.OBJECT,
+                    properties: {
+                        prompt: {
+                            type: FunctionDeclarationSchemaType.STRING
+                        },
+                    },
+                    required: ['prompt'],
+                }
+            },
+            {
+                name: "stableDiffusion",
+                description: 'Text to Image Generation. Versatile in styles, handling a wider range of visual aesthetics and open-ended creative prompts.',
+                parameters: {
+                    type: FunctionDeclarationSchemaType.OBJECT,
+                    properties: {
+                        prompt: {
+                            type: FunctionDeclarationSchemaType.STRING
+                        },
+                        negative_prompt: {
+                            type: FunctionDeclarationSchemaType.STRING
+                        },
+                        aspect_ratio: {
+                            type: FunctionDeclarationSchemaType.STRING
+                        },
+                        output_format: {
+                            type: FunctionDeclarationSchemaType.STRING
+                        }
                     },
                     required: ['prompt'],
                 }

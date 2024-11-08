@@ -2,12 +2,15 @@
  * ChatManager Module
 */
 
-import { Content, GenerateContentRequest, GenerativeModel } from '@google-cloud/vertexai';
+import { Content, FileDataPart, GenerateContentRequest, GenerativeModel, TextPart } from '@google-cloud/vertexai';
 import { loadMessagesFromDatabase, saveMelodyFileToDatabase, saveMessageToDatabase } from '../../../utils/messages';
 import { AnthropicVertex } from '@anthropic-ai/vertex-sdk';
 import { functionDeclarations } from '../../../config/vertex/geminiConfig';
 import { fluxPro, fluxSchnell } from '../../../config/minions/fal';
 import { AuthSocket } from '../../../sockets/handlers/authHandler';
+import { luma } from '../../../config/minions/piapi';
+import { convertToGsUri, getMimeType } from '../../../utils/utils';
+import { generativeModel } from '../../../config/vertex/geminiSingleton';
 
 interface MessageParam {
     content: string;
@@ -66,22 +69,56 @@ export class ChatManager {
      * @param prompt - The message prompt to send.
      * @returns - The response from the chat.
      */
-    async sendMessage(prompt: string, socket: AuthSocket, chatId: string): Promise<void> {
+    async sendMessage(prompt: string, socket: AuthSocket, chatId: string, fileUris: string[]): Promise<void> {
 
         // No chat
         if (!this.chat) {
-            throw new Error('No active chat session.');
+            await this.loadOrCreateChat(chatId, generativeModel);
         }
 
         if (!socket.userId) {
             throw new Error('UserID required');
         }
 
+        if (!this.modelInstance) {
+            throw new Error('No Model Available.');
+        }
+
         if (this.modelInstance instanceof GenerativeModel) {
             try {
+                const requestFileParts = (fileUris || []).map(uri => ({
+                    fileUri: convertToGsUri(uri),  // Convert each URI
+                    mimeType: getMimeType(uri)    // Get the MIME type for each URI
+                }))
+                    .filter(item => item.fileUri !== null)  // Filter out null URIs
+                    .map(item => ({
+                        fileData: {
+                            fileUri: item.fileUri as string,  // TypeScript now knows item.fileUri is not null
+                            mimeType: item.mimeType
+                        }
+                    }));
+
+                const requestTextPart: TextPart | null = prompt ? { text: prompt } : null;
+
+                // Build the parts array dynamically based on the existence of text or file data
+                const parts: (TextPart | FileDataPart)[] = [];
+
+                if (requestTextPart) {
+                    parts.push(requestTextPart);
+                }
+
+                if (requestFileParts.length > 0) {
+                    parts.push(...requestFileParts);
+                }
+
+                // Ensure that there is at least one part (text or file)
+                if (parts.length === 0) {
+                    throw new Error("At least one of text or file must be provided.");
+                }
+
                 // Append new user message to chat
                 const newContent: Content = {
-                    parts: [{ text: prompt }],
+                    parts: parts,
                     role: "user"
                 }
 
@@ -117,6 +154,8 @@ export class ChatManager {
 
                 // Handle each part of the model response
                 for (var part of modelResponse.response.candidates[0].content.parts) {
+
+                    // Select Part type
                     if (part.text) {
                         console.log("Found text part: " + part.text);
                         textPart = part.text;
@@ -127,7 +166,8 @@ export class ChatManager {
                         // Attempt saving the message to Supabase
                         console.log('Saving message for user:', socket.userId);
                         saveMessageToDatabase(chatId, socket.userId, textPart);
-                    } else if (part.functionCall) {
+                    }
+                    else if (part.functionCall) {
 
                         // Log the function call part
                         console.log("Found function call: " + part.functionCall);
@@ -203,11 +243,36 @@ export class ChatManager {
                                 console.error('Prompt is not available or not a string');
                             }
                         }
+                        else if (functionCallName === "luma") {
+
+                            // Extract function call arguments
+                            const functionCallArgs = part.functionCall.args;
+
+                            console.log("CALLLLLLLLING LUMA .......");
+
+                            let videoUri;
+
+                            // Update on state
+                            socket.emit('melody_state_update', { state: "GENERATING_VIDEO" });
+
+                            if (
+                                'prompt' in functionCallArgs && typeof functionCallArgs.prompt === 'string'
+                            ) {
+                                const result: any = await luma(functionCallArgs.prompt);
+
+                                videoUri = await result;
+
+                                console.log(await videoUri);
+                            } else {
+                                console.error('Prompt is not available or not a string');
+                            }
+                        }
 
                         // Do a follow-up of the function response
                         // ...
 
-                    } else if (part.functionResponse) {
+                    }
+                    else if (part.functionResponse) {
                         console.log("Found function response: " + part.functionResponse);
                         functionResponsePart = part.functionResponse;
                     }

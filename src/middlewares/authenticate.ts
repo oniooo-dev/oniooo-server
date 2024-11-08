@@ -42,7 +42,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         // Return the user to the Client
         const authUser: User = {
             userId: userData.user_id,
-            username: userData.username,
             email: userData.email,
             iconUrl: userData.icon_url,
             mochiBalance: userData.mochi_balance,

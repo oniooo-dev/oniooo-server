@@ -11,7 +11,7 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
     try {
         const userId = req.user?.userId as string;
 
-        const { firstPrompt, modelName }: { firstPrompt: string, modelName: "flash" | "claude" } = req.body;
+        const { firstPrompt, modelName }: { firstPrompt: string, modelName: "gemini" | "claude" } = req.body;
         const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt, modelName);
 
         if (!newChat) {

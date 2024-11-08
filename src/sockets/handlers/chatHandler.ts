@@ -7,6 +7,7 @@ import { AuthSocket } from "./authHandler";
 interface ChatMessage {
     chatId: string;
     prompt: string;
+    fileUris: string[];
 }
 
 // Initialize chat handling with user ID
@@ -14,9 +15,10 @@ export const handleChatInteration = (socket: AuthSocket) => {
 
     // Send message to Melody
     socket.on('send_to_melody', async (message: ChatMessage) => {
-        const { chatId, prompt } = message;
+        const { chatId, prompt, fileUris } = message;
 
-        if (!chatId || !prompt) {
+        // ...
+        if (!chatId || (!prompt && !fileUris)) {
             socket.emit('error', 'Message content is empty');
             return;
         }
@@ -33,7 +35,7 @@ export const handleChatInteration = (socket: AuthSocket) => {
             }
 
             // Request to Melody
-            await socket.melody.generateContent(prompt, socket, chatId);
+            await socket.melody.generateContent(prompt, socket, chatId, fileUris);
         } catch (error: any) {
             console.error('Error during message streaming:', error);
             socket.emit('error', error.message);

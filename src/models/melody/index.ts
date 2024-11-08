@@ -35,13 +35,13 @@ export class Melody {
      * @param prompt - The message prompt to send.
      * @returns - The response from the model.
      */
-    async generateContent(prompt: string, socket: Socket, chatId: string): Promise<void> {
+    async generateContent(prompt: string, socket: Socket, chatId: string, fileUris: string[]): Promise<void> {
         try {
             // Update on state
             socket.emit('melody_state_update', { state: "TYPING" });
 
             // Dispatch Request to ChatManager
-            await this.chatManager.sendMessage(prompt, socket, chatId);
+            await this.chatManager.sendMessage(prompt, socket, chatId, fileUris);
         } catch (error) {
             console.error('Error in generateContent:', error);
             throw error;

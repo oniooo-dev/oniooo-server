@@ -7,7 +7,7 @@ import { generativeModel } from '../../../config/vertex/geminiSingleton';
 import { DatabaseError } from '../../../types/errors';
 import { loadMessagesFromDatabase } from '../../../utils/messages';
 
-export const createMelodyChat = async (userId: string, firstPrompt: string, modelName: "flash" | "claude") => {
+export const createMelodyChat = async (userId: string, firstPrompt: string, modelName: "gemini" | "claude") => {
     // Generate a chat title based on the first prompt
     const generateTitleRequest = {
         contents: [

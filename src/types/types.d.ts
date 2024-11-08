@@ -4,7 +4,6 @@
 
 type User = {
     userId: string;
-    username: string;
     email: string | undefined;
     iconUrl: string | undefined;
     mochiBalance: number;
@@ -16,7 +15,7 @@ type MelodyChat = {
     last_active: string;
     user_id: string;
     title: string;
-    model_name: "flash" | "claude";
+    model_name: "gemini" | "claude";
 };
 
 type MelodyMessage = {

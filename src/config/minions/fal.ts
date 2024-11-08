@@ -29,6 +29,12 @@ fal.config({
 */
 
 export const fluxPro = async (prompt: string) => {
+
+    /**
+     * Flux Pro 1.1 : https://fal.ai/models/fal-ai/flux-pro/v1.1/api
+    */
+
+    // Generate a single very cool image
     const result = await fal.subscribe("fal-ai/flux-pro", {
         input: {
             prompt: prompt,
@@ -45,6 +51,12 @@ export const fluxPro = async (prompt: string) => {
 }
 
 export const fluxSchnell = async (prompt: string, num_images: number) => {
+
+    /**
+     * Flux Schnell : https://fal.ai/models/fal-ai/flux/schnell/api
+    */
+
+    // Generate a bulk of decent images
     const result = await fal.subscribe("fal-ai/flux/schnell", {
         input: {
             prompt: prompt,
