@@ -100,12 +100,14 @@ export const suno = async (prompt: string) => {
     };
 
     try {
-        const response = await axios.post('https://api.piapi.ai/api/v1/task', data, {
+        let response = await axios.post('https://api.piapi.ai/api/v1/task', data, {
             headers: { 'X-API-KEY': process.env.PIAPI_KEY }
         });
 
         console.log(`POST /task status: ${response.status}`);
         console.log(`Task created:`, response.data);
+
+        response = response.data
 
         const taskId: string = response.data.task_id;
 
@@ -117,7 +119,7 @@ export const suno = async (prompt: string) => {
 
         // Start polling for task status
         return new Promise<string>((resolve, reject) => {
-            const maxAttempts = 12; // e.g., 12 attempts = 60 seconds
+            const maxAttempts = 24; // e.g., 24 attempts = 120 seconds
             let attempts = 0;
 
             const intervalId = setInterval(async () => {
