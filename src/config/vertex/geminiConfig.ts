@@ -104,28 +104,28 @@ export const functionDeclarations: Tool[] = [
                     required: ['prompt'],
                 }
             },
-            {
-                name: "stableDiffusion",
-                description: 'Text to Image Generation. Versatile in styles, handling a wider range of visual aesthetics and open-ended creative prompts.',
-                parameters: {
-                    type: FunctionDeclarationSchemaType.OBJECT,
-                    properties: {
-                        prompt: {
-                            type: FunctionDeclarationSchemaType.STRING
-                        },
-                        negative_prompt: {
-                            type: FunctionDeclarationSchemaType.STRING
-                        },
-                        aspect_ratio: {
-                            type: FunctionDeclarationSchemaType.STRING
-                        },
-                        output_format: {
-                            type: FunctionDeclarationSchemaType.STRING
-                        }
-                    },
-                    required: ['prompt'],
-                }
-            },
+            // {
+            //     name: "stableDiffusion",
+            //     description: 'Text to Image Generation. Versatile in styles, handling a wider range of visual aesthetics and open-ended creative prompts.',
+            //     parameters: {
+            //         type: FunctionDeclarationSchemaType.OBJECT,
+            //         properties: {
+            //             prompt: {
+            //                 type: FunctionDeclarationSchemaType.STRING
+            //             },
+            //             negative_prompt: {
+            //                 type: FunctionDeclarationSchemaType.STRING
+            //             },
+            //             aspect_ratio: {
+            //                 type: FunctionDeclarationSchemaType.STRING
+            //             },
+            //             output_format: {
+            //                 type: FunctionDeclarationSchemaType.STRING
+            //             }
+            //         },
+            //         required: ['prompt'],
+            //     }
+            // },
         ],
     },
 ];
