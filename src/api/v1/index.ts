@@ -57,15 +57,21 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
     // Check if the signature is present
     if (!sig) {
+        console.error('Webhook Error: Missing Stripe signature');
         return res.status(400).send('Missing Stripe signature');
     }
 
     let event;
     try {
+        // Log the body and signature for debugging purposes
+        console.log('Receiving webhook with signature:', sig);
+        console.log('Body:', req.body.toString()); // Convert Buffer to string for logging
+
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     } catch (err: any) {
-        // Catch and handle errors related to event construction
+        // Log the error for debugging
+        console.error('Error in constructing webhook event:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
@@ -76,6 +82,9 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
             if (session.metadata) {
                 const userId = session.metadata.userId;
                 const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Parse the mochi amount safely
+
+                // Log successful session processing
+                console.log(`Processing completed checkout session for user ${userId} with mochi amount ${mochiAmount}`);
 
                 // Function to update user balance with mochis
                 addMochiBalance(userId, mochiAmount);
