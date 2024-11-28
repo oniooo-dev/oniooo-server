@@ -55,11 +55,15 @@ router.post('/webhooks', json({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
     let event;
     try {
+        // Simulate processing the webhook data
+        console.log('Webhook received:', req.body);
+
         if (!sig) {
             throw new Error('Missing stripe signature');
         }
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    } catch (err) {
+    }
+    catch (err) {
         if (err instanceof Error) {
             res.status(400).send(`Webhook Error: ${err.message}`);
         } else {
