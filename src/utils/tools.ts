@@ -85,6 +85,6 @@ const removeBackgroundTool: Anthropic.Tool = {
 export const tools: Anthropic.Tool[] = [
     fluxProTool,
     fluxSchnellTool,
-    // fastUpscale,
+    fastUpscale,
     // removeBackgroundTool
 ];
