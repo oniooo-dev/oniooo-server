@@ -1,30 +1,20 @@
-export function getMimeType(uri: string) {
+import mime from 'mime-types';
 
-    const extension = uri.split('.').pop();
+/**
+ * Get the MIME type based on the file extension.
+ * @param uri - The URI or file name.
+ * @returns The corresponding MIME type or a default if unknown.
+ */
+export function getMimeType(uri: string): string {
+    const extension = uri.split('.').pop()?.toLowerCase();
 
-    console.log(extension);
+    // Use mime-types package to get the MIME type
+    const mimeType = extension ? mime.lookup(extension) : false;
 
-    switch (extension) {
-        case 'jpg':
-        case 'jpeg':
-            return 'image/jpeg';
-        case 'png':
-            return 'image/png';
-        case 'gif':
-            return 'image/gif';
-        case 'pdf':
-            return 'application/pdf';
-        case 'txt':
-            return 'text/plain';
-        default:
-            return 'application/octet-stream'; // Default MIME type if unknown
+    if (mimeType) {
+        return mimeType;
     }
-}
 
-export function convertToGsUri(httpsUrl: string) {
-    const matches = httpsUrl.match(/https:\/\/storage.googleapis.com\/([^\/]+)\/(.+)/);
-    if (matches) {
-        return `gs://${matches[1]}/${matches[2].split('?')[0]}`; // Remove URL parameters
-    }
-    return null; // or throw an error
+    // Default MIME type if unknown
+    return 'application/octet-stream';
 }

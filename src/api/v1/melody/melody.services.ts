@@ -1,33 +1,25 @@
+
 /**
  * Service Layer for Melody API Route
 */
 
 import { supabase } from '../../../config/supabase';
-import { generativeModel } from '../../../config/vertex/geminiSingleton';
-import { DatabaseError } from '../../../types/errors';
 import { loadMessagesFromDatabase } from '../../../utils/messages';
+import { llmService } from '../../../integrations/llmServiceSingleton';
+import { DatabaseError } from '../../../types/errors';
 
-export const createMelodyChat = async (userId: string, firstPrompt: string, modelName: "gemini" | "claude") => {
-    // Generate a chat title based on the first prompt
-    const generateTitleRequest = {
-        contents: [
-            {
-                role: 'user',
-                parts: [
-                    {
-                        text: `Generate a title with some emojis of ONLY 3 to 8 words based on the following first prompt from the user:[${firstPrompt}], Please only output the title string.`,
-                    },
-                ],
-            },
-        ],
-    };
+export const createMelodyChat = async (userId: string, firstPrompt: string) => {
 
-    const result = await generativeModel.generateContent(generateTitleRequest);
-    const title = result.response.candidates?.[0].content?.parts?.[0].text;
+    const title = await llmService.generate(firstPrompt);
 
     const { data, error: dbError } = await supabase
         .from('melody_chats')
-        .insert([{ user_id: userId, title: title, model_name: modelName }])
+        .insert([
+            {
+                user_id: userId,
+                title: title
+            }
+        ])
         .select();
 
     if (dbError) {
@@ -41,7 +33,6 @@ export const createMelodyChat = async (userId: string, firstPrompt: string, mode
         last_active: data[0].last_active,
         user_id: 'SIKE',
         title: data[0].title,
-        model_name: modelName
     };
 
     // Append the first message to the chat
@@ -67,11 +58,13 @@ export const createMelodyChat = async (userId: string, firstPrompt: string, mode
 };
 
 export const fetchChats = async (userId: string) => {
+
+    // Fetch all chats for the user
     const { data, error: dbError } = await supabase
         .from('melody_chats')
         .select('*')
         .eq('user_id', userId)
-        .order('last_active', { ascending: false });
+        .order('updated_at', { ascending: false });
 
     if (dbError) {
         throw new DatabaseError(500, 'Error fetching chats');
@@ -84,7 +77,6 @@ export const fetchChats = async (userId: string) => {
             last_active: chat.last_active,
             user_id: chat.user_id,
             title: chat.title,
-            model_name: chat.model_name
         };
     });
 

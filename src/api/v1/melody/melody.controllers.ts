@@ -1,3 +1,4 @@
+
 /**
  * Controller Layer for Melody API Route
 */
@@ -11,8 +12,8 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
     try {
         const userId = req.user?.userId as string;
 
-        const { firstPrompt, modelName }: { firstPrompt: string, modelName: "gemini" | "claude" } = req.body;
-        const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt, modelName);
+        const { firstPrompt }: { firstPrompt: string } = req.body;
+        const { newChat, newMessage } = await MelodyService.createMelodyChat(userId, firstPrompt);
 
         if (!newChat) {
             throw new MelodyError(500, 'Internal server error');
@@ -26,7 +27,8 @@ export const createMelodyChat = async (req: Request, res: Response, next: NextFu
             newChat,
             newMessage,
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };
@@ -45,7 +47,8 @@ export const fetchMelodyChats = async (req: Request, res: Response, next: NextFu
         res.status(200).json({
             chats,
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };
@@ -63,7 +66,8 @@ export const createMelodyChatMessage = async (req: Request, res: Response, next:
         res.status(200).json({
             newMessage,
         });
-    } catch (error) {
+    }
+    catch (error) {
         console.log(error);
         next(error);
     }
@@ -78,7 +82,8 @@ export const fetchMelodyChatMessages = async (req: Request, res: Response, next:
         res.status(200).json({
             messages,
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };
@@ -92,7 +97,8 @@ export const updateMelodyChat = async (req: Request, res: Response, next: NextFu
         res.status(200).json({
             updatedChat,
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };
@@ -105,7 +111,8 @@ export const deleteMelodyChat = async (req: Request, res: Response, next: NextFu
         res.status(200).json({
             message: 'Chat deleted',
         });
-    } catch (error) {
+    }
+    catch (error) {
         next(error);
     }
 };

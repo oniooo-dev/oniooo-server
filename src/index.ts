@@ -1,3 +1,8 @@
+
+/**
+ * Main Server File
+*/
+
 import express, { Express } from 'express';
 import http from 'http';
 import https from 'https';
@@ -5,7 +10,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import apiVersion1 from './api/v1';
 import { port } from './config';
 import { setupMiddleware } from './middlewares';
-import { setupWebSocket } from './sockets/handlers/socketHandler';
+import { setupWebSocket } from './integrations/sockets';
 // import { loadSSLCertificates } from './utils/ssl';
 
 // Initialize Express server
@@ -14,7 +19,7 @@ const app: Express = express();
 // const server = process.env.NODE_ENV === 'production' ? https.createServer(options, app) : http.createServer(app);
 const server = http.createServer(app);
 
-// Setup middleware and routes
+// Setup Express middleware and routes
 setupMiddleware(app);
 app.use('/api/v1/', apiVersion1);
 
@@ -22,6 +27,7 @@ app.use('/api/v1/', apiVersion1);
 const io = new SocketIOServer(server, {
     path: '/socket.io'
 });
+
 setupWebSocket(io);
 
 // Start listening to requests

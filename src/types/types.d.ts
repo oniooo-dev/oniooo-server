@@ -1,6 +1,9 @@
+
 /**
  * Type definitions for the project
 */
+
+declare module 'mime-types';
 
 type User = {
     userId: string;
@@ -15,7 +18,6 @@ type MelodyChat = {
     last_active: string;
     user_id: string;
     title: string;
-    model_name: "gemini" | "claude";
 };
 
 type MelodyMessage = {
@@ -26,6 +28,3 @@ type MelodyMessage = {
     type: "USER_TEXT" | "USER_FILE" | "SYSTEM_TEXT" | "SYSTEM_FILE";
     content: string;
 };
-
-// Union type for the Model Instances
-type ModelInstance = GenerativeModel | AnthropicVertex;

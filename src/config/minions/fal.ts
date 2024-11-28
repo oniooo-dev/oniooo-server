@@ -1,11 +1,10 @@
 import { fal } from "@fal-ai/client";
 import dotenv from "dotenv";
+import { inspect } from "util";
 
 dotenv.config();
 
 fal.config({
-    // Can also be auto-configured using environment variables:
-    // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
     credentials: process.env.FAL_KEY
 });
 
@@ -23,10 +22,6 @@ fal.config({
 //     has_nsfw_concepts: [ false ],
 //     prompt: 'dwjaiofjwaiofjwaiojfwa'
 // }
-
-/**
- * NEED TO REFACTOR
-*/
 
 export const fluxPro = async (prompt: string) => {
 
@@ -47,7 +42,13 @@ export const fluxPro = async (prompt: string) => {
         },
     });
 
-    return result;
+    console.log(`result: ${inspect(result)}`);
+
+    const imageUrl = result.data.images[0].url;
+
+    console.log(`imageUrl: ${imageUrl}`);
+
+    return imageUrl;
 }
 
 export const fluxSchnell = async (prompt: string, num_images: number) => {
@@ -70,5 +71,7 @@ export const fluxSchnell = async (prompt: string, num_images: number) => {
         },
     });
 
-    return result;
+    console.log(`result: ${inspect(result)}`);
+
+    return result.data.images;
 }

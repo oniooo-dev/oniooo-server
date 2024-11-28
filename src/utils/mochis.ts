@@ -2,6 +2,9 @@ import { supabase } from '../config/supabase';
 
 // Adding Mochis
 export async function addMochiBalance(userId: string, amount: number) {
+    
+    console.log('Adding mochis to user:', userId);
+  
     const { data, error } = await supabase.rpc('add_mochi_balance', { 
       target_user_id: userId,
       amount: amount

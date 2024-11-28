@@ -1,6 +1,8 @@
 import fs from 'fs';
 
 export const loadSSLCertificates = (): { key: Buffer; cert: Buffer; } | {} => {
+
+    // Production SSL Certificates
     if (process.env.NODE_ENV === 'production') {
         try {
             const key = fs.readFileSync('/etc/letsencrypt/live/api.oniooo.com/privkey.pem');

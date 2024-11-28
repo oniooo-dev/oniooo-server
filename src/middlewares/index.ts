@@ -1,3 +1,8 @@
+
+/**
+ * Middleware for the Express app
+*/
+
 import { Express } from 'express';
 import express from "express";
 import helmet from 'helmet';

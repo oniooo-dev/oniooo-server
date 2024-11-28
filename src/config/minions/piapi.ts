@@ -62,7 +62,8 @@ export const luma = async (prompt: string) => {
                         clearInterval(intervalId);
                         console.log(`Task ${taskId} completed. Video URL: ${videoUrl}`);
                         resolve(videoUrl);
-                    } else if (taskStatus === 'failed') {
+                    }
+                    else if (taskStatus === 'failed') {
                         clearInterval(intervalId);
                         console.error(`Task ${taskId} failed.`);
                         reject(new Error(`Task ${taskId} failed.`));
