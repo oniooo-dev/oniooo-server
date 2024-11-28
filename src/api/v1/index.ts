@@ -1,3 +1,4 @@
+import express from 'express';
 import { json, Router } from 'express';
 import Stripe from 'stripe';
 import { authenticate } from '../../middlewares/authenticate';
@@ -51,46 +52,48 @@ router.post('/create-checkout-session', async (req, res) => {
     // Start of Selection
 });
 
-router.post('/webhooks', json({ type: 'application/json' }), (req, res) => {
+router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
+
+    // Check if the signature is present
+    if (!sig) {
+        return res.status(400).send('Missing Stripe signature');
+    }
+
     let event;
     try {
-        // Simulate processing the webhook data
-        console.log('Webhook received:', req.body);
-
-        if (!sig) {
-            throw new Error('Missing stripe signature');
-        }
+        // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    }
-    catch (err) {
-        if (err instanceof Error) {
-            res.status(400).send(`Webhook Error: ${err.message}`);
-        } else {
-            res.status(400).send('Webhook Error');
-        }
-        return;
+    } catch (err: any) {
+        // Catch and handle errors related to event construction
+        return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the checkout.session.completed event
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
+    // Handle the event type
+    switch (event.type) {
+        case 'checkout.session.completed':
+            const session = event.data.object;
+            if (session.metadata) {
+                const userId = session.metadata.userId;
+                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Parse the mochi amount safely
 
-        // Add null check for metadata
-        if (session.metadata) {
-            const userId = session.metadata.userId;
-            const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Specify radix
-
-            // Update user balance with mochis
-            addMochiBalance(userId, mochiAmount);
-        }
-        else {
-            console.error('Missing metadata in session');
-            // Optionally handle the missing metadata case
-        }
+                // Function to update user balance with mochis
+                addMochiBalance(userId, mochiAmount);
+            } else {
+                console.error('Missing metadata in session');
+                // Handle cases where metadata is missing
+                res.status(400).send('Missing metadata');
+                return;
+            }
+            break;
+        default:
+            console.warn(`Unhandled event type: ${event.type}`);
+            break;
     }
 
+    // Respond to Stripe to acknowledge receipt of the event
     res.json({ received: true });
 });
+
 
 export default router;
