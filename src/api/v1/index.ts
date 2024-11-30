@@ -46,6 +46,12 @@ router.post('/create-checkout-session', async (req, res) => {
                 priceId: priceId, // Include price ID instead of product ID
                 mochiAmount: mochiAmount.toString() // Convert to string if it's a number
             },
+            payment_intent_data: {
+                metadata: {
+                    userId: userId,
+                    mochiAmount: mochiAmount.toString()
+                }
+            },
             success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.origin}/cancel`,
         });
@@ -74,10 +80,6 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
     let event;
     try {
-        // Log the body and signature for debugging purposes
-        console.log('Receiving webhook with signature:', sig);
-        console.log('Body:', req.body.toString());
-
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     }
@@ -91,21 +93,17 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
         case 'payment_intent.succeeded':
 
-            // Get the session object
-            const session = event.data.object;
+            const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
-            // Ensure metadata exists before processing
-            if (session.metadata && session.metadata.userId && session.metadata.mochiAmount) {
+            if (paymentIntent.metadata && paymentIntent.metadata.userId && paymentIntent.metadata.mochiAmount) {
 
-                console.log('Stripe session metadata', session.metadata);
+                console.log('Stripe PaymentIntent metadata', paymentIntent.metadata);
 
-                const userId = session.metadata.userId;
-                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // str -> int
+                const userId = paymentIntent.metadata.userId;
+                const mochiAmount = parseInt(paymentIntent.metadata.mochiAmount, 10);
 
-                // Log successful session processing
                 console.log(`Payment succeeded for user ${userId} with mochi amount ${mochiAmount}`);
 
-                // Update user balance with mochis
                 addMochiBalance(userId, mochiAmount)
                     .then(() => res.json({ success: true }))
                     .catch(error => {
@@ -114,7 +112,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
                     });
             }
             else {
-                console.error('Missing or incomplete metadata in session');
+                console.error('Missing or incomplete metadata in PaymentIntent');
                 res.status(400).send('Missing metadata');
             }
 
