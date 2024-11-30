@@ -17,7 +17,8 @@ export async function addMochiBalance(userId: string, amount: number) {
   
     if (data && data.length > 0) {
       return { success: data[0].success, message: data[0].message };
-    } else {
+    } 
+    else {
       return { success: false, message: 'Unexpected response from server' };
     }
   }
@@ -36,7 +37,8 @@ export async function decreaseMochiBalance(userId: string, amount: number) {
   
     if (data && data.length > 0) {
       return { success: data[0].success, message: data[0].message };
-    } else {
+    } 
+    else {
       return { success: false, message: 'Unexpected response from server' };
     }
   }

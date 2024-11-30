@@ -39,11 +39,14 @@ export const fetchProductsWithPrices = async (): Promise<MochiBannerProps[]> => 
                 const priceData = prices.data[0];
                 const price = priceData ? Number(priceData.unit_amount) / 100 : 0;
                 const priceId = priceData ? priceData.id : '';
+                const mochiAmount = priceData && priceData.metadata.mochiAmount
+                    ? Number(priceData.metadata.mochiAmount)
+                    : 0;
 
                 return {
                     name: product.name,
                     price: price,
-                    amount: 1, // You can modify this as needed
+                    amount: mochiAmount,
                     priceId: priceId,
                 };
             })

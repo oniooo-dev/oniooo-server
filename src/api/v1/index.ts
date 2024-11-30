@@ -73,15 +73,18 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-    } catch (err: any) {
+    }
+    catch (err: any) {
         console.error('Error in constructing webhook event:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
     // Handle the event type
     switch (event.type) {
+
         case 'checkout.session.completed':
             const session = event.data.object;
+
             // Ensure metadata exists before processing
             if (session.metadata && session.metadata.userId && session.metadata.mochiAmount) {
                 const userId = session.metadata.userId;
@@ -97,11 +100,13 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
                         console.error('Failed to update mochi balance:', error);
                         res.status(500).send('Internal Server Error');
                     });
-            } else {
+            }
+            else {
                 console.error('Missing or incomplete metadata in session');
                 res.status(400).send('Missing metadata');
             }
             break;
+
         default:
             console.warn(`Unhandled event type: ${event.type}`);
             res.status(400).send(`Unhandled event type: ${event.type}`);
