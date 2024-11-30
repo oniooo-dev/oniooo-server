@@ -66,8 +66,6 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     // Get the signature from the headers
     const sig = req.headers['stripe-signature'];
 
-    console.log('Webhook req.body', req.body);
-
     // Check if the signature is present
     if (!sig) {
         console.error('Webhook Error: Missing Stripe signature');
@@ -78,7 +76,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     try {
         // Log the body and signature for debugging purposes
         console.log('Receiving webhook with signature:', sig);
-        console.log('Body:', req.body.toString()); // Convert Buffer to string for logging
+        console.log('Body:', req.body);
 
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
