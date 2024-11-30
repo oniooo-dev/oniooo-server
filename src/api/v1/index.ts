@@ -9,6 +9,9 @@ import { addMochiBalance } from '../../utils/mochis';
 
 const router = Router();
 
+// Add JSON body parser middleware
+router.use(json());
+
 // API Routes
 router.use('/users', userRoutes);
 router.use('/melody', authenticate, melodyRoutes);
@@ -26,6 +29,10 @@ router.post('/create-checkout-session', async (req, res) => {
 
     const { priceId, userId, mochiAmount } = req.body;  // Removed productId
 
+    if (!priceId || !userId || !mochiAmount) {
+        return res.status(400).send({ error: 'Missing required fields' });
+    }
+
     try {
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -37,7 +44,7 @@ router.post('/create-checkout-session', async (req, res) => {
             metadata: {
                 userId: userId, // Store user ID in metadata for later retrieval
                 priceId: priceId, // Include price ID instead of product ID
-                mochiAmount: mochiAmount // Amount of mochis this product grants
+                mochiAmount: mochiAmount.toString() // Convert to string if it's a number
             },
             success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${req.headers.origin}/cancel`,
@@ -91,6 +98,9 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
             // Ensure metadata exists before processing
             if (session.metadata && session.metadata.userId && session.metadata.mochiAmount) {
+
+                console.log('Stripe session metadata', session.metadata);
+
                 const userId = session.metadata.userId;
                 const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Safely parse the mochi amount
 
