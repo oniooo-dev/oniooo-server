@@ -76,7 +76,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     try {
         // Log the body and signature for debugging purposes
         console.log('Receiving webhook with signature:', sig);
-        console.log('Body:', req.body);
+        console.log('Body:', req.body.toString());
 
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
