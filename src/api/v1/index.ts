@@ -53,8 +53,13 @@ router.post('/create-checkout-session', async (req, res) => {
 });
 
 router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
+
+    // Get the signature from the headers
     const sig = req.headers['stripe-signature'];
 
+    console.log('Webhook req.body', req.body);
+
+    // Check if the signature is present
     if (!sig) {
         console.error('Webhook Error: Missing Stripe signature');
         return res.status(400).send('Missing Stripe signature');
