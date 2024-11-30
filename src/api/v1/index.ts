@@ -55,7 +55,6 @@ router.post('/create-checkout-session', async (req, res) => {
 router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
 
-    // Check if the signature is present
     if (!sig) {
         console.error('Webhook Error: Missing Stripe signature');
         return res.status(400).send('Missing Stripe signature');
@@ -70,7 +69,6 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
         // Construct the event sent by Stripe
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
     } catch (err: any) {
-        // Log the error for debugging
         console.error('Error in constructing webhook event:', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
@@ -79,29 +77,31 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     switch (event.type) {
         case 'checkout.session.completed':
             const session = event.data.object;
-            if (session.metadata) {
+            // Ensure metadata exists before processing
+            if (session.metadata && session.metadata.userId && session.metadata.mochiAmount) {
                 const userId = session.metadata.userId;
-                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Parse the mochi amount safely
+                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Safely parse the mochi amount
 
                 // Log successful session processing
                 console.log(`Processing completed checkout session for user ${userId} with mochi amount ${mochiAmount}`);
 
-                // Function to update user balance with mochis
-                addMochiBalance(userId, mochiAmount);
+                // Update user balance with mochis
+                addMochiBalance(userId, mochiAmount)
+                    .then(() => res.json({ received: true }))
+                    .catch(error => {
+                        console.error('Failed to update mochi balance:', error);
+                        res.status(500).send('Internal Server Error');
+                    });
             } else {
-                console.error('Missing metadata in session');
-                // Handle cases where metadata is missing
+                console.error('Missing or incomplete metadata in session');
                 res.status(400).send('Missing metadata');
-                return;
             }
             break;
         default:
             console.warn(`Unhandled event type: ${event.type}`);
+            res.status(400).send(`Unhandled event type: ${event.type}`);
             break;
     }
-
-    // Respond to Stripe to acknowledge receipt of the event
-    res.json({ received: true });
 });
 
 
