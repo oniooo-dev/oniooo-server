@@ -19,8 +19,11 @@ const app: Express = express();
 // const server = process.env.NODE_ENV === 'production' ? https.createServer(options, app) : http.createServer(app);
 const server = http.createServer(app);
 
+app.use('/api/v1/webhooks', express.raw({ type: 'application/json' }));
+
 // Setup Express middleware and routes
 setupMiddleware(app);
+
 app.use('/api/v1/', apiVersion1);
 
 // Create and configure the Socket.IO server
