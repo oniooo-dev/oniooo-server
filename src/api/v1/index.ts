@@ -43,6 +43,8 @@ router.post('/create-checkout-session', async (req, res) => {
             cancel_url: `${req.headers.origin}/cancel`,
         });
 
+        console.log('Stripe session created', session);
+
         res.json({ id: session.id, url: session.url });
     }
     catch (error: any) {
@@ -83,6 +85,8 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     switch (event.type) {
 
         case 'checkout.session.completed':
+
+            // Get the session object
             const session = event.data.object;
 
             // Ensure metadata exists before processing
@@ -95,7 +99,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
 
                 // Update user balance with mochis
                 addMochiBalance(userId, mochiAmount)
-                    .then(() => res.json({ received: true }))
+                    .then(() => res.json({ success: true }))
                     .catch(error => {
                         console.error('Failed to update mochi balance:', error);
                         res.status(500).send('Internal Server Error');
@@ -105,6 +109,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
                 console.error('Missing or incomplete metadata in session');
                 res.status(400).send('Missing metadata');
             }
+
             break;
 
         default:
