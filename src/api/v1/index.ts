@@ -89,7 +89,7 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
     // Handle the event type
     switch (event.type) {
 
-        case 'checkout.session.completed':
+        case 'payment_intent.succeeded':
 
             // Get the session object
             const session = event.data.object;
@@ -100,10 +100,10 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
                 console.log('Stripe session metadata', session.metadata);
 
                 const userId = session.metadata.userId;
-                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // Safely parse the mochi amount
+                const mochiAmount = parseInt(session.metadata.mochiAmount, 10); // str -> int
 
                 // Log successful session processing
-                console.log(`Processing completed checkout session for user ${userId} with mochi amount ${mochiAmount}`);
+                console.log(`Payment succeeded for user ${userId} with mochi amount ${mochiAmount}`);
 
                 // Update user balance with mochis
                 addMochiBalance(userId, mochiAmount)
