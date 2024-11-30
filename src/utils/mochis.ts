@@ -43,6 +43,29 @@ export async function decreaseMochiBalance(userId: string, amount: number) {
     }
   }
 
+// Get the mochi balance
+export async function getMochiBalance(userId: string): Promise<{ success: boolean; balance?: number; message?: string }> {
+  
+  // Get the mochi balance
+  const { data, error } = await supabase
+      .from('users')
+      .select('mochi_balance')
+      .eq('user_id', userId)
+      .single();
+
+  if (error) {
+      console.error('Supabase query error:', error);
+      return { success: false, message: 'Failed to retrieve mochi balance.' };
+  }
+
+  if (data && typeof data.mochi_balance === 'number') {
+      return { success: true, balance: data.mochi_balance };
+  } 
+  else {
+      return { success: false, message: 'Mochi balance not found.' };
+  }
+}
+
 // Usage
 // async function handleMochiTransaction() {
 //     const result = await addMochiBalance('user-uuid', 100);
