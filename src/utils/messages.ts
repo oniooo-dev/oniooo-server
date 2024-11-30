@@ -107,31 +107,18 @@ export async function convertToMessageParam(message: MelodyMessage): Promise<Mes
             ? 'user'
             : 'assistant';
 
-    let content: string | ImageBlockParam[] | any; // TODO: Fix this
+    let content: string;
 
     const imageMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
 
     if (mimeType && imageMimeTypes.includes(mimeType as typeof imageMimeTypes[number])) {
         try {
-            // Extract the S3 object key from the full URL
             const fileUrl = message.content; // Full S3 URL
             const fileKey = extractS3KeyFromUrl(fileUrl);
-
-            // Log the extracted key
-            console.log('Extracted S3 Object Key:', fileKey);
-
-            // Fetch and convert file to base64
             const base64Data = await fetchFileAsBase64(fileKey);
-            content = [
-                {
-                    type: "image",
-                    source: {
-                        type: "base64",
-                        media_type: mimeType as typeof imageMimeTypes[number],
-                        data: base64Data
-                    }
-                },
-            ];
+
+            // Instead of assigning an object, embed the image URL or a reference in the string
+            content = `![Image](${fileUrl})`;
         }
         catch (error) {
             console.error('Failed to convert image to base64:', error);
@@ -140,26 +127,8 @@ export async function convertToMessageParam(message: MelodyMessage): Promise<Mes
     }
     else if (mimeType && mimeType === 'application/pdf') {
         try {
-            // Extract the S3 object key from the full URL
             const fileUrl = message.content; // Full S3 URL
-            const fileKey = extractS3KeyFromUrl(fileUrl);
-
-            // Fetch and convert file to base64
-            const pdfBase64 = await fetchFileAsBase64(fileKey);
-            content = [
-                {
-                    type: 'document',
-                    source: {
-                        media_type: 'application/pdf',
-                        type: 'base64',
-                        data: pdfBase64,
-                    },
-                },
-                {
-                    type: 'text',
-                    text: 'Take into account the content of the document when responding.',
-                },
-            ];
+            content = `PDF Document: [View Document](${fileUrl})`;
         }
         catch (error) {
             console.error('Failed to convert document to base64:', error);
@@ -167,7 +136,6 @@ export async function convertToMessageParam(message: MelodyMessage): Promise<Mes
         }
     }
     else {
-        // Handle unsupported MIME types
         content = message.content.trim();
     }
 

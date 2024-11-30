@@ -7,8 +7,8 @@ import { llmService } from "../llmServiceSingleton";
 import { appendChunkToMessage, createChatInDatabase, createMessagePlaceholder, loadMessagesForLLMFromDatabase, saveMessageToDatabase, extractS3KeyFromUrl, fetchFileAsBase64 } from "../../utils/messages";
 import { inspect } from "util";
 import { fluxPro, fluxSchnell } from "../../config/minions/fal";
-import { luma } from "../../config/minions/piapi";
-import { fastUpscale, removeBackground } from "../../config/minions/stability";
+import { kling, luma, suno } from "../../config/minions/piapi";
+import { fastUpscale, removeBackground, stableDiffusion } from "../../config/minions/stability";
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -96,9 +96,23 @@ export class ChatHandler {
                 // Start streaming the response from the LLM
                 const stream = llmService.stream(userTextQuery, previousChatMessages, fileURIs);
 
+                this.socket.emit('melody_state_update',
+                    {
+                        melodyState: "THINKING"
+                    }
+                );
+
+                // TEXT STREAM
                 stream.on(
                     'text',
                     async (chunk) => {
+
+                        // MELODY STARTS YAPPIN'
+                        this.socket.emit('melody_state_update',
+                            {
+                                melodyState: null
+                            }
+                        );
 
                         // Increment the chunk ID
                         const currentChunkId = this.chunkId++;
@@ -118,11 +132,20 @@ export class ChatHandler {
                     }
                 )
 
+                // TOOL USE STREAM
                 stream.on(
                     'contentBlock',
                     async (contentBlock: any) => {
 
                         if (contentBlock.type === "tool_use") {
+
+                            this.socket.emit('melody_state_update',
+                                {
+                                    melodyState: "CREATING"
+                                }
+                            );
+
+                            // TOOL USE - UPDATE MELODY CHAT STATE HERE
 
                             /// Log the tool use
                             console.log(`toolUse: ${inspect(contentBlock)}`);
@@ -133,6 +156,11 @@ export class ChatHandler {
                                     'image_response',
                                     {
                                         imageUrl: imageUrl,
+                                    }
+                                );
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
                                     }
                                 );
                                 await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
@@ -146,8 +174,29 @@ export class ChatHandler {
                                             imageUrl: image.url,
                                         }
                                     );
+                                    this.socket.emit('melody_state_update',
+                                        {
+                                            melodyState: null
+                                        }
+                                    );
                                     await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", image.url);
                                 }
+                            }
+                            else if (contentBlock.name === "stableDiffusionLarge") {
+                                console.log('stableDiffusionLarge: ', contentBlock.input);
+                                const imageUrl = await stableDiffusion(contentBlock.input.prompt, contentBlock.input.negative_prompt, contentBlock.input.aspect_ratio, 'jpeg');
+                                this.socket.emit(
+                                    'image_response',
+                                    {
+                                        imageUrl: imageUrl,
+                                    }
+                                );
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
                             }
                             else if (contentBlock.name === "fastUpscale") {
                                 try {
@@ -178,8 +227,14 @@ export class ChatHandler {
                                             imageUrl: imageUrl,
                                         }
                                     );
+                                    this.socket.emit('melody_state_update',
+                                        {
+                                            melodyState: null
+                                        }
+                                    );
                                     await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
-                                } catch (error) {
+                                }
+                                catch (error) {
                                     console.error('Error during fastUpscale:', error);
                                     this.socket.emit('error', { message: 'Failed to process image for upscaling.' });
                                 }
@@ -195,6 +250,11 @@ export class ChatHandler {
                                             imageUrl: imageUrl,
                                         }
                                     );
+                                    this.socket.emit('melody_state_update',
+                                        {
+                                            melodyState: null
+                                        }
+                                    );
                                     await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
                                 }
                                 catch (error) {
@@ -202,10 +262,59 @@ export class ChatHandler {
                                     this.socket.emit('error', { message: 'Failed to process image for removing background.' });
                                 }
                             }
+                            else if (contentBlock.name === "luma") {
+                                console.log('luma: ', contentBlock.input);
+                                const videoUrl = await luma(contentBlock.input.prompt);
+                                this.socket.emit(
+                                    'video_response',
+                                    {
+                                        videoUrl: videoUrl,
+                                    }
+                                );
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", videoUrl as string);
+                            }
+                            else if (contentBlock.name === "suno") {
+                                console.log('suno: ', contentBlock.input);
+                                const musicUrl = await suno(contentBlock.input.prompt);
+                                this.socket.emit(
+                                    'audio_response',
+                                    {
+                                        audioUrl: musicUrl,
+                                    }
+                                );
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", musicUrl as string);
+                            }
+                            else if (contentBlock.name === "kling") {
+                                console.log('kling: ', contentBlock.input);
+                                const videoUrl = await kling(contentBlock.input.prompt);
+                                this.socket.emit(
+                                    'video_response',
+                                    {
+                                        videoUrl: videoUrl,
+                                    }
+                                );
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", videoUrl as string);
+                            }
                         }
                     }
                 );
 
+                // END STREAM
                 stream.on(
                     'end',
                     () => {
@@ -214,6 +323,7 @@ export class ChatHandler {
                     }
                 );
 
+                // ERROR STREAM
                 stream.on(
                     'error',
                     (err) => {
