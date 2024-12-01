@@ -41,7 +41,8 @@ export function extractS3KeyFromUrl(url: string): string {
         }
 
         return key;
-    } catch (error: any) {
+    }
+    catch (error: any) {
         console.error(`Invalid S3 URL provided: ${url}`);
         throw new Error('Failed to extract S3 object key from URL.');
     }
@@ -84,6 +85,43 @@ export async function fetchFileAsBase64(fileKey: string): Promise<string> {
     }
     catch (error: any) {
         console.error(`Error fetching and converting image from S3: ${error.message}`);
+        throw error;
+    }
+}
+
+/**
+ * Generates a pre-signed URL for accessing a file in S3.
+ */
+export async function generateSignedUrl(fileKey: string): Promise<string> {
+    const bucketName = process.env.AWS_S3_BUCKET_NAME;
+
+    // Enhanced Logging for Debugging
+    console.log('Generating signed URL with the following parameters:');
+    console.log('Bucket Name:', bucketName);
+    console.log('File Key:', fileKey);
+
+    if (!bucketName) {
+        throw new Error('AWS_S3_BUCKET_NAME is not defined in environment variables.');
+    }
+
+    try {
+        const params = {
+            Bucket: bucketName, // Your S3 bucket name
+            Key: fileKey,
+        };
+
+        // Generate a pre-signed URL
+        const command = new GetObjectCommand(params);
+        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 60 });
+
+        if (!signedUrl) {
+            throw new Error('Failed to generate signed URL');
+        }
+
+        return signedUrl;
+    }
+    catch (error: any) {
+        console.error(`Error generating signed URL from S3: ${error.message}`);
         throw error;
     }
 }

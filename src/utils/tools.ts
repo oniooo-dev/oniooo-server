@@ -66,12 +66,8 @@ const stableDiffusionLargeTool: Anthropic.Tool = {
     },
 }
 
-/**
- * TODO: Handle Image URI
-*/
-
-const fastUpscale: Anthropic.Tool = {
-    name: "fastUpscale",
+const clarityUpscalerTool: Anthropic.Tool = {
+    name: "clarityUpscaler",
     description: "Upscale an image to a higher resolution.",
     input_schema: {
         type: "object",
@@ -89,6 +85,30 @@ const removeBackgroundTool: Anthropic.Tool = {
         required: [],
     },
 }
+
+/**
+ * TODO: Handle Image URI
+*/
+
+const fastUpscale: Anthropic.Tool = {
+    name: "fastUpscale",
+    description: "Upscale an image to a higher resolution.",
+    input_schema: {
+        type: "object",
+        properties: {},
+        required: [],
+    },
+}
+
+// const removeBackgroundTool: Anthropic.Tool = {
+//     name: "removeBackground",
+//     description: "Remove the background of an image.",
+//     input_schema: {
+//         type: "object",
+//         properties: {},
+//         required: [],
+//     },
+// }
 
 /**
  * PiAPI Tools
@@ -143,8 +163,9 @@ export const tools: Anthropic.Tool[] = [
     fluxProTool,
     fluxSchnellTool,
     stableDiffusionLargeTool,
-    fastUpscale,
-    // removeBackgroundTool,
+    // fastUpscale,
+    removeBackgroundTool,
+    clarityUpscalerTool,
     lumaTool,
     // sunoTool,
     klingTool,

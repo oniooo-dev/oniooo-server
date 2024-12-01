@@ -6,20 +6,22 @@ import { AuthSocket } from "./types";
 import { llmService } from "../llmServiceSingleton";
 import { appendChunkToMessage, createChatInDatabase, createMessagePlaceholder, loadMessagesForLLMFromDatabase, saveMessageToDatabase, extractS3KeyFromUrl, fetchFileAsBase64 } from "../../utils/messages";
 import { inspect } from "util";
-import { fluxPro, fluxSchnell } from "../../config/minions/fal";
+import { clarityUpscaler, fluxPro, fluxSchnell, removeBackground } from "../../config/minions/fal";
 import { kling, luma, suno } from "../../config/minions/piapi";
-import { fastUpscale, removeBackground, stableDiffusion } from "../../config/minions/stability";
+import { fastUpscale, stableDiffusion } from "../../config/minions/stability";
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { decreaseMochiBalance, getMochiBalance } from "../../utils/mochis";
+import { generateSignedUrl } from "../../utils/messages";
 
 export enum MochiCost {
     TEXT_GENERATION = 1,
     IMAGE_GEN_FLUX_SCHNELL = 2,
     IMAGE_GEN_FLUX_PRO = 10,
     IMAGE_GEN_STABLE_DIFFUSION = 10,
-    IMAGE_GEN_FAST_UPSCALE = 2,
+    // IMAGE_GEN_FAST_UPSCALE = 2,
+    IMAGE_GEN_CLARITY_UPSCALE = 2,
     IMAGE_GEN_REMOVE_BACKGROUND = 2,
     VIDEO_GEN_KLING = 40,
     VIDEO_GEN_LUMA = 40,
@@ -283,54 +285,69 @@ export class ChatHandler {
                                 await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
                                 mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_STABLE_DIFFUSION);
                             }
-                            else if (contentBlock.name === "fastUpscale") {
+                            else if (contentBlock.name === "clarityUpscaler") {
 
                                 // Check if the user has enough mochi balance
-                                if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_FAST_UPSCALE) {
+                                if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_CLARITY_UPSCALE) {
                                     this.socket.emit('error', { message: 'Insufficient mochi balance.' });
                                     return;
                                 }
 
-                                try {
-                                    // Step 1: Extract the S3 key from the file URI
-                                    const s3Key = extractS3KeyFromUrl(fileURIs[0]);
+                                // Upscale the image
+                                const fileKey = extractS3KeyFromUrl(fileURIs[0]);
+                                const signedUrl = await generateSignedUrl(fileKey);
+                                const imageUrl = await clarityUpscaler(signedUrl);
 
-                                    // Step 2: Fetch the file as Base64
-                                    const base64Data = await fetchFileAsBase64(s3Key);
+                                // Emit the image to the client
+                                this.socket.emit(
+                                    'image_response',
+                                    {
+                                        imageUrl: imageUrl,
+                                    }
+                                );
 
-                                    // Step 3: Convert Base64 to Binary Buffer
-                                    const binaryBuffer = Buffer.from(base64Data, 'base64');
+                                // Update the melody state
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
 
-                                    // Step 4: Write Binary Buffer to a Temporary File
-                                    const tempDir = os.tmpdir();
-                                    const tempFilePath = path.join(tempDir, `image_${Date.now()}.png`);
-                                    fs.writeFileSync(tempFilePath, binaryBuffer);
+                                // Save the image URL to the database
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
+                                mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_CLARITY_UPSCALE);
+                            }
+                            else if (contentBlock.name === "removeBackground") {
 
-                                    // Step 5: Pass the Temporary File Path to fastUpscale
-                                    const imageUrl = await fastUpscale(tempFilePath);
-
-                                    // Step 6: Clean Up the Temporary File
-                                    fs.unlinkSync(tempFilePath);
-
-                                    // Emit and save the upscaled image URL
-                                    this.socket.emit(
-                                        'image_response',
-                                        {
-                                            imageUrl: imageUrl,
-                                        }
-                                    );
-                                    this.socket.emit('melody_state_update',
-                                        {
-                                            melodyState: null
-                                        }
-                                    );
-                                    await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
-                                    mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_FAST_UPSCALE);
+                                // Check if the user has enough mochi balance
+                                if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_REMOVE_BACKGROUND) {
+                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                    return;
                                 }
-                                catch (error) {
-                                    console.error('Error during fastUpscale:', error);
-                                    this.socket.emit('error', { message: 'Failed to process image for upscaling.' });
-                                }
+
+                                // Remove the background
+                                const fileKey = extractS3KeyFromUrl(fileURIs[0]);
+                                const signedUrl = await generateSignedUrl(fileKey);
+                                const imageUrl = await removeBackground(signedUrl);
+
+                                // Emit the image to the client
+                                this.socket.emit(
+                                    'image_response',
+                                    {
+                                        imageUrl: imageUrl,
+                                    }
+                                );
+
+                                // Update the melody state
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+
+                                // Save the image URL to the database
+                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
+                                mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_REMOVE_BACKGROUND);
                             }
                             else if (contentBlock.name === "luma") {
 
@@ -392,6 +409,54 @@ export class ChatHandler {
                                 await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", videoUrl as string);
                                 mochiAmount = Math.max(mochiAmount, MochiCost.VIDEO_GEN_KLING);
                             }
+                            // else if (contentBlock.name === "fastUpscale") {
+                            //     // Check if the user has enough mochi balance
+                            //     if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_FAST_UPSCALE) {
+                            //         this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                            //         return;
+                            //     }
+
+                            //     try {
+                            //         // Step 1: Extract the S3 key from the file URI
+                            //         const s3Key = extractS3KeyFromUrl(fileURIs[0]);
+
+                            //         // Step 2: Fetch the file as Base64
+                            //         const base64Data = await fetchFileAsBase64(s3Key);
+
+                            //         // Step 3: Convert Base64 to Binary Buffer
+                            //         const binaryBuffer = Buffer.from(base64Data, 'base64');
+
+                            //         // Step 4: Write Binary Buffer to a Temporary File
+                            //         const tempDir = os.tmpdir();
+                            //         const tempFilePath = path.join(tempDir, `image_${Date.now()}.png`);
+                            //         fs.writeFileSync(tempFilePath, binaryBuffer);
+
+                            //         // Step 5: Pass the Temporary File Path to fastUpscale
+                            //         const imageUrl = await fastUpscale(tempFilePath);
+
+                            //         // Step 6: Clean Up the Temporary File
+                            //         fs.unlinkSync(tempFilePath);
+
+                            //         // Emit and save the upscaled image URL
+                            //         this.socket.emit(
+                            //             'image_response',
+                            //             {
+                            //                 imageUrl: imageUrl,
+                            //             }
+                            //         );
+                            //         this.socket.emit('melody_state_update',
+                            //             {
+                            //                 melodyState: null
+                            //             }
+                            //         );
+                            //         await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
+                            //         mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_FAST_UPSCALE);
+                            //     }
+                            //     catch (error) {
+                            //         console.error('Error during fastUpscale:', error);
+                            //         this.socket.emit('error', { message: 'Failed to process image for upscaling.' });
+                            //     }
+                            // }
                             // else if (contentBlock.name === "removeBackground") {
                             //     try {
                             //         const imageUrl = await removeBackground(fileURIs[0]);
