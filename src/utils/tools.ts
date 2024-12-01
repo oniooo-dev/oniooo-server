@@ -162,7 +162,7 @@ const klingTool: Anthropic.Tool = {
 export const tools: Anthropic.Tool[] = [
     fluxProTool,
     fluxSchnellTool,
-    stableDiffusionLargeTool,
+    // stableDiffusionLargeTool,
     // fastUpscale,
     removeBackgroundTool,
     clarityUpscalerTool,
