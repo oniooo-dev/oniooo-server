@@ -134,6 +134,9 @@ export async function convertToMessageParam(message: MelodyMessage): Promise<Mes
         return null;
     }
 
+    // Define supported media types including PDF
+    const mediaTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"] as const;
+
     // Infer the MIME type from the file URI
     const mimeType =
         message.type === 'USER_FILE' || message.type === 'SYSTEM_FILE'
@@ -145,31 +148,41 @@ export async function convertToMessageParam(message: MelodyMessage): Promise<Mes
             ? 'user'
             : 'assistant';
 
-    let content: string;
+    let content: string | ImageBlockParam | any;
 
-    const imageMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
-
-    if (mimeType && imageMimeTypes.includes(mimeType as typeof imageMimeTypes[number])) {
+    if (mimeType && mediaTypes.includes(mimeType as typeof mediaTypes[number])) {
         try {
             const fileUrl = message.content; // Full S3 URL
             const fileKey = extractS3KeyFromUrl(fileUrl);
             const base64Data = await fetchFileAsBase64(fileKey);
 
-            // Instead of assigning an object, embed the image URL or a reference in the string
-            content = `![Image](${fileUrl})`;
+            if (mimeType === 'application/pdf') {
+                content = [
+                    {
+                        type: 'document',
+                        source: {
+                            data: base64Data,
+                            media_type: "application/pdf",
+                            type: 'base64'
+                        }
+                    }
+                ];
+            }
+            else {
+                content = [
+                    {
+                        type: 'image',
+                        source: {
+                            data: base64Data,
+                            media_type: mimeType,
+                            type: 'base64'
+                        }
+                    }
+                ];
+            }
         }
         catch (error) {
-            console.error('Failed to convert image to base64:', error);
-            content = message.content.trim();
-        }
-    }
-    else if (mimeType && mimeType === 'application/pdf') {
-        try {
-            const fileUrl = message.content; // Full S3 URL
-            content = `PDF Document: [View Document](${fileUrl})`;
-        }
-        catch (error) {
-            console.error('Failed to convert document to base64:', error);
+            console.error('Failed to convert file to base64:', error);
             content = message.content.trim();
         }
     }
@@ -258,6 +271,7 @@ export async function saveMessageToDatabase(
 
 // Fetch messages of chat by id
 export async function loadMessagesFromDatabase(userId: string, chatId: string) {
+
     // Check if the user is a participant in the chat
     const { error: dbError } = await supabase
         .from('melody_chats')
