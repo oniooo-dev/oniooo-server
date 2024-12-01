@@ -519,6 +519,15 @@ export class ChatHandler {
                             );
                         }
                         else {
+                            // Deduct mochi from user's balance
+                            const deductionSuccess = await decreaseMochiBalance(userId, mochiAmount);
+
+                            // Check if the mochi deduction was successful
+                            if (!deductionSuccess) {
+                                this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                return;
+                            }
+
                             this.socket.emit(
                                 'mochi_balance_update',
                                 {
