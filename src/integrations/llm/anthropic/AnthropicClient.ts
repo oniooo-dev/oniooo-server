@@ -87,7 +87,7 @@ export class AnthropicClient {
                         Please try to keep your responses concise and to the point.
                         Help the user with their query, you can write great answers, code.
                         Only use tools if the user explicitly asks for it.
-                        When responding, please use clean and proper Markdown formatting for your text. 
+                        When responding, please use extensive Markdown formatting for your text. 
                         This includes using:
                         - Bold for emphasis on key terms (**bold**)
                         - Italics for secondary emphasis or for highlighting new or technical terms (*italics*)
@@ -97,6 +97,7 @@ export class AnthropicClient {
                         - Blockquotes for quotes or important notes
                         - Code blocks for any code snippets or commands
                         - Links for any URLs
+                        - Put extra newlines between sections to make the text more readable.
                     `
                 },
                 {
