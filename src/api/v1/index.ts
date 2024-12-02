@@ -1,11 +1,12 @@
-import express from 'express';
-import { json, Router } from 'express';
+import express, { json, Router } from 'express';
 import Stripe from 'stripe';
 import { authenticate } from '../../middlewares/authenticate';
+import { addMochiBalance } from '../../utils/mochis';
+import { logPaymentSuccess } from '../../utils/payments';
 import melodyRoutes from './melody/melody.routes';
+import paymentsRoutes from './payments/payments.routes';
 import productRoutes from './products/products.routes';
 import userRoutes from './users/users.routes';
-import { addMochiBalance } from '../../utils/mochis';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use(json());
 router.use('/users', userRoutes);
 router.use('/melody', authenticate, melodyRoutes);
 router.use('/products', productRoutes);
+router.use('/payments', authenticate, paymentsRoutes);
 
 /**
  * Stripe
@@ -110,6 +112,8 @@ router.post('/webhooks', express.raw({ type: 'application/json' }), (req, res) =
                         console.error('Failed to update mochi balance:', error);
                         res.status(500).send('Internal Server Error');
                     });
+
+                logPaymentSuccess({ userId, amount: mochiAmount, status: 'succeeded', createdAt: new Date().toISOString() });
             }
             else {
                 console.error('Missing or incomplete metadata in PaymentIntent');
