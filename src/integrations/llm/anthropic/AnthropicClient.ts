@@ -137,7 +137,6 @@ export class AnthropicClient {
                             - Blockquotes for quotes or important notes
                             - Code blocks for any code snippets or commands
                             - Links for any URLs
-                            - Put extra newlines between sections (not code blocks) to make the text more readable.
                         `
                     },
                     {
