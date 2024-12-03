@@ -1,4 +1,3 @@
-
 /**
  * Currently tightly coupled with the Anthropic Interface (BAD)
 */
@@ -24,7 +23,7 @@ export class LLMService {
         return await this.client.generate(prompt);
     }
 
-    stream(userTextQuery: string, chatPreviousMessages: Array<MessageParam>, fileURIs: string[]): MessageStream {
+    stream(userTextQuery: string, chatPreviousMessages: Array<MessageParam>, fileURIs: string[]) {
         return this.client.stream(userTextQuery, chatPreviousMessages, fileURIs);
     }
 }

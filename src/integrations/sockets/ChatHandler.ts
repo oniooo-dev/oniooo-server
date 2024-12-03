@@ -14,17 +14,18 @@ import path from 'path';
 import os from 'os';
 import { decreaseMochiBalance, getMochiBalance } from "../../utils/mochis";
 import { generateSignedUrl } from "../../utils/messages";
+import { AnthropicClient } from "../llm/anthropic/AnthropicClient";
 
 export enum MochiCost {
     TEXT_GENERATION = 1,
-    IMAGE_GEN_FLUX_SCHNELL = 2,
-    IMAGE_GEN_FLUX_PRO = 10,
-    IMAGE_GEN_STABLE_DIFFUSION = 10,
+    IMAGE_GEN_FLUX_SCHNELL = 1,
+    IMAGE_GEN_FLUX_PRO = 8,
+    // IMAGE_GEN_STABLE_DIFFUSION = 10,
     // IMAGE_GEN_FAST_UPSCALE = 2,
-    IMAGE_GEN_CLARITY_UPSCALE = 2,
-    IMAGE_GEN_REMOVE_BACKGROUND = 2,
-    VIDEO_GEN_KLING = 40,
-    VIDEO_GEN_LUMA = 40,
+    IMAGE_GEN_CLARITY_UPSCALE = 1,
+    IMAGE_GEN_REMOVE_BACKGROUND = 1,
+    VIDEO_GEN_KLING = 30,
+    VIDEO_GEN_LUMA = 30,
 }
 
 function base64ToBinaryString(base64String: string): string {
@@ -46,9 +47,11 @@ interface ToolUsage {
 export class ChatHandler {
     socket: AuthSocket;
     chunkId: number = 0;    // Incrementing ID for each chunk
+    anthropicClient: AnthropicClient;
 
     constructor(socket: AuthSocket) {
         this.socket = socket;
+        this.anthropicClient = new AnthropicClient();
         this.registerEvents();
     }
 
@@ -76,7 +79,6 @@ export class ChatHandler {
                 // Extract the data from the message
                 let { chatId, userTextQuery, fileURIs } = data;
                 console.log(`User: ${userTextQuery}`);
-
                 console.log('File URIs: ', fileURIs);
 
                 // Create the chat in the database if it doesn't exist
@@ -118,15 +120,39 @@ export class ChatHandler {
                     return;
                 }
 
+                console.log('mochiBalance: ', mochiBalance.balance);
+
                 // Database operations for message persistence
                 if (userTextQuery) {
+
+                    console.log('userTextQuery: ', userTextQuery);
 
                     // Text generation is used
                     mochiAmount = Math.max(mochiAmount, MochiCost.TEXT_GENERATION);
 
+                    console.log('mochiAmount: ', mochiAmount);
+                    console.log('mochiBalance: ', mochiBalance.balance);
+
+
+                    if (!mochiBalance.balance) {
+                        this.socket.emit(
+                            'error',
+                            {
+                                message: 'INSUFFICIENT_MOCHI_BALANCE'
+                            }
+                        );
+                        return;
+                    }
+
                     // Check if the user has enough mochi balance
-                    if (mochiBalance.balance && mochiBalance.balance < MochiCost.TEXT_GENERATION) {
-                        this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                    if (mochiBalance.balance < mochiAmount) { // Updated condition
+                        console.log('mochiBalance: ', mochiBalance.balance, 'MochiCost: ', mochiAmount);
+                        this.socket.emit(
+                            'error',
+                            {
+                                message: 'INSUFFICIENT_MOCHI_BALANCE'
+                            }
+                        );
                         return;
                     }
                     else {
@@ -138,7 +164,7 @@ export class ChatHandler {
                 const previousChatMessages = await loadMessagesForLLMFromDatabase(userId, chatId);
 
                 // Start streaming the response from the LLM
-                const stream = llmService.stream(userTextQuery, previousChatMessages, fileURIs);
+                const { stream } = llmService.stream(userTextQuery, previousChatMessages, fileURIs);
 
                 this.socket.emit('melody_state_update',
                     {
@@ -201,7 +227,7 @@ export class ChatHandler {
                                     this.socket.emit(
                                         'error',
                                         {
-                                            message: 'Insufficient mochi balance.'
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
                                         }
                                     );
                                     return;
@@ -231,7 +257,7 @@ export class ChatHandler {
                                     this.socket.emit(
                                         'error',
                                         {
-                                            message: 'Insufficient mochi balance.'
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
                                         }
                                     );
                                     return;
@@ -262,34 +288,16 @@ export class ChatHandler {
                                 }
                                 mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_FLUX_SCHNELL * numImages);
                             }
-                            else if (contentBlock.name === "stableDiffusionLarge") {
-
-                                // Check if the user has enough mochi balance
-                                if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_STABLE_DIFFUSION) {
-                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
-                                    return;
-                                }
-
-                                const imageUrl = await stableDiffusion(contentBlock.input.prompt, contentBlock.input.negative_prompt, contentBlock.input.aspect_ratio, 'jpeg');
-                                this.socket.emit(
-                                    'image_response',
-                                    {
-                                        imageUrl: imageUrl,
-                                    }
-                                );
-                                this.socket.emit('melody_state_update',
-                                    {
-                                        melodyState: null
-                                    }
-                                );
-                                await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
-                                mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_STABLE_DIFFUSION);
-                            }
                             else if (contentBlock.name === "clarityUpscaler") {
 
                                 // Check if the user has enough mochi balance
                                 if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_CLARITY_UPSCALE) {
-                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                    this.socket.emit(
+                                        'error',
+                                        {
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
+                                        }
+                                    );
                                     return;
                                 }
 
@@ -321,7 +329,12 @@ export class ChatHandler {
 
                                 // Check if the user has enough mochi balance
                                 if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_REMOVE_BACKGROUND) {
-                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                    this.socket.emit(
+                                        'error',
+                                        {
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
+                                        }
+                                    );
                                     return;
                                 }
 
@@ -353,7 +366,12 @@ export class ChatHandler {
 
                                 // Check if the user has enough mochi balance
                                 if (mochiBalance.balance && mochiBalance.balance < MochiCost.VIDEO_GEN_LUMA) {
-                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                    this.socket.emit(
+                                        'error',
+                                        {
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
+                                        }
+                                    );
                                     return;
                                 }
 
@@ -383,7 +401,12 @@ export class ChatHandler {
 
                                 // Check if the user has enough mochi balance
                                 if (mochiBalance.balance && mochiBalance.balance < MochiCost.VIDEO_GEN_KLING) {
-                                    this.socket.emit('error', { message: 'Insufficient mochi balance.' });
+                                    this.socket.emit(
+                                        'error',
+                                        {
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
+                                        }
+                                    );
                                     return;
                                 }
 
@@ -409,6 +432,34 @@ export class ChatHandler {
                                 await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", videoUrl as string);
                                 mochiAmount = Math.max(mochiAmount, MochiCost.VIDEO_GEN_KLING);
                             }
+                            // else if (contentBlock.name === "stableDiffusionLarge") {
+
+                            //     // Check if the user has enough mochi balance
+                            //     if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_STABLE_DIFFUSION) {
+                            //         this.socket.emit(
+                            //             'error',
+                            //             {
+                            //                 message: 'INSUFFICIENT_MOCHI_BALANCE'
+                            //             }
+                            //         );
+                            //         return;
+                            //     }
+
+                            //     const imageUrl = await stableDiffusion(contentBlock.input.prompt, contentBlock.input.negative_prompt, contentBlock.input.aspect_ratio, 'jpeg');
+                            //     this.socket.emit(
+                            //         'image_response',
+                            //         {
+                            //             imageUrl: imageUrl,
+                            //         }
+                            //     );
+                            //     this.socket.emit('melody_state_update',
+                            //         {
+                            //             melodyState: null
+                            //         }
+                            //     );
+                            //     await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", imageUrl);
+                            //     mochiAmount = Math.max(mochiAmount, MochiCost.IMAGE_GEN_STABLE_DIFFUSION);
+                            // }
                             // else if (contentBlock.name === "fastUpscale") {
                             //     // Check if the user has enough mochi balance
                             //     if (mochiBalance.balance && mochiBalance.balance < MochiCost.IMAGE_GEN_FAST_UPSCALE) {
