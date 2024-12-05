@@ -15,7 +15,7 @@ export const fluxPro = async (prompt: string) => {
     */
 
     // Generate a single very cool image
-    const result = await fal.subscribe("fal-ai/flux-pro", {
+    const result = await fal.subscribe("fal-ai/flux-pro/v1.1-ultra", {
         input: {
             prompt: prompt,
         },
@@ -116,6 +116,32 @@ export const removeBackground = async (inputImageUrl: string) => {
     console.log(`imageUrl: ${imageUrl}`);
 
     return imageUrl;
+}
+
+export const miniMax = async (prompt: string, imageUrl: string) => {
+
+
+    /**
+     * MiniMax : https://fal.ai/models/fal-ai/minimax-video/image-to-video/api
+    */
+
+    console.log(`prompt: ${prompt}`);
+    console.log(`imageUrl: ${imageUrl}`);
+
+    const result = await fal.subscribe("fal-ai/minimax-video/image-to-video", {
+        input: {
+            prompt: prompt,
+            image_url: imageUrl
+        },
+        logs: true,
+        onQueueUpdate: (update) => {
+            if (update.status === "IN_PROGRESS") {
+                update.logs.map((log) => log.message).forEach(console.log);
+            }
+        },
+    });
+
+    return result.data.video.url;
 }
 
 // Result: {

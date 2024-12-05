@@ -6,7 +6,7 @@ import { AuthSocket } from "./types";
 import { llmService } from "../llmServiceSingleton";
 import { appendChunkToMessage, createChatInDatabase, createMessagePlaceholder, loadMessagesForLLMFromDatabase, saveMessageToDatabase, extractS3KeyFromUrl, fetchFileAsBase64 } from "../../utils/messages";
 import { inspect } from "util";
-import { clarityUpscaler, fluxPro, fluxSchnell, removeBackground } from "../../config/minions/fal";
+import { clarityUpscaler, fluxPro, fluxSchnell, miniMax, removeBackground } from "../../config/minions/fal";
 import { kling, luma, suno } from "../../config/minions/piapi";
 import { fastUpscale, stableDiffusion } from "../../config/minions/stability";
 import fs from 'fs';
@@ -26,6 +26,7 @@ export enum MochiCost {
     IMAGE_GEN_REMOVE_BACKGROUND = 1,
     VIDEO_GEN_KLING = 30,
     VIDEO_GEN_LUMA = 30,
+    VIDEO_GEN_MINI_MAX = 50,
 }
 
 function base64ToBinaryString(base64String: string): string {
@@ -432,6 +433,41 @@ export class ChatHandler {
                                 await saveMessageToDatabase(chatId, userId, "SYSTEM_FILE", videoUrl as string);
                                 mochiAmount = Math.max(mochiAmount, MochiCost.VIDEO_GEN_KLING);
                             }
+                            else if (contentBlock.name === "minimaxVideo") {
+
+                                // Check if the user has enough mochi balance
+                                if (mochiBalance.balance && mochiBalance.balance < MochiCost.VIDEO_GEN_MINI_MAX) {
+                                    this.socket.emit(
+                                        'error',
+                                        {
+                                            message: 'INSUFFICIENT_MOCHI_BALANCE'
+                                        }
+                                    );
+                                    return;
+                                }
+
+                                // Upscale the image
+                                const fileKey = extractS3KeyFromUrl(fileURIs[0]);
+                                const signedUrl = await generateSignedUrl(fileKey);
+                                const imageUrl = await clarityUpscaler(signedUrl);
+
+                                const videoUrl = await miniMax(contentBlock.input.prompt, imageUrl);
+
+                                this.socket.emit(
+                                    'video_response',
+                                    {
+                                        videoUrl: videoUrl,
+                                    }
+                                );
+
+                                // Update the melody state
+                                this.socket.emit('melody_state_update',
+                                    {
+                                        melodyState: null
+                                    }
+                                );
+                            }
+
                             // else if (contentBlock.name === "stableDiffusionLarge") {
 
                             //     // Check if the user has enough mochi balance

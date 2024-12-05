@@ -86,6 +86,21 @@ const removeBackgroundTool: Anthropic.Tool = {
     },
 }
 
+const minimaxVideoTool: Anthropic.Tool = {
+    name: "minimaxVideo",
+    description: "Generate a video based on a prompt and an image.",
+    input_schema: {
+        type: "object",
+        properties: {
+            prompt: {
+                type: "string",
+                description: "A enhanced prompt to generate a video with. If the prompt is not provided, the video will be generated based on the image.",
+            },
+        },
+        required: ["prompt"],
+    },
+}
+
 /**
  * TODO: Handle Image URI
 */
@@ -169,4 +184,5 @@ export const tools: Anthropic.Tool[] = [
     lumaTool,
     // sunoTool,
     klingTool,
+    minimaxVideoTool,
 ];
