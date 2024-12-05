@@ -13,7 +13,7 @@ const fluxProTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate an image with.",
+                description: "A enhanced prompt to generate an image with.",
             },
         },
         required: ["prompt"],
@@ -28,7 +28,7 @@ const fluxSchnellTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate an image with.",
+                description: "A enhanced prompt to generate an image with.",
             },
             num_images: {
                 type: "number",
@@ -47,7 +47,7 @@ const stableDiffusionLargeTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate an image with.",
+                description: "A enhanced prompt to generate an image with.",
             },
             negative_prompt: {
                 type: "string",
@@ -68,7 +68,7 @@ const stableDiffusionLargeTool: Anthropic.Tool = {
 
 const clarityUpscalerTool: Anthropic.Tool = {
     name: "clarityUpscaler",
-    description: "Upscale an image to a higher resolution.",
+    description: "Upscale an image to a higher resolution. Only takes one image at a time.",
     input_schema: {
         type: "object",
         properties: {},
@@ -78,7 +78,7 @@ const clarityUpscalerTool: Anthropic.Tool = {
 
 const removeBackgroundTool: Anthropic.Tool = {
     name: "removeBackground",
-    description: "Remove the background of an image.",
+    description: "Remove the background of an image. Only takes one image at a time.",
     input_schema: {
         type: "object",
         properties: {},
@@ -92,7 +92,7 @@ const removeBackgroundTool: Anthropic.Tool = {
 
 const fastUpscale: Anthropic.Tool = {
     name: "fastUpscale",
-    description: "Upscale an image to a higher resolution.",
+    description: "Upscale an image to a higher resolution. Only takes one image at a time.",
     input_schema: {
         type: "object",
         properties: {},
@@ -122,7 +122,7 @@ const lumaTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate a video with.",
+                description: "A enhanced prompt to generate a video with.",
             },
         },
         required: ["prompt"],
@@ -137,7 +137,7 @@ const sunoTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate a music track with.",
+                description: "A enhanced prompt to generate a music track with.",
             },
         },
         required: ["prompt"],
@@ -152,7 +152,7 @@ const klingTool: Anthropic.Tool = {
         properties: {
             prompt: {
                 type: "string",
-                description: "A detailed prompt to generate a video with.",
+                description: "A enhanced prompt to generate a video with.",
             },
         },
         required: ["prompt"],
